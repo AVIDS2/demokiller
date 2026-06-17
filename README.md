@@ -2,13 +2,45 @@
 
 Demo Killer is the pre-launch production engineer for AI-built apps.
 
-It helps developers identify why a working prototype is still only a demo, what can happen in production, and what must change before real users touch it.
+It tells you why your working Next.js SaaS or AI app is still a demo, what can happen in production, and what must change before real users touch it.
 
-## Current Status
+## Usage
 
-This repository is in the product-design and MVP-planning phase.
+```powershell
+npm install
+npm run build
+node dist/src/cli.js inspect fixtures/next-ai-saas-risky --markdown
+```
 
-Core direction:
+You can also inspect a public GitHub repository URL:
+
+```powershell
+node dist/src/cli.js inspect https://github.com/owner/repo --json
+```
+
+Example verdict:
+
+```text
+Verdict: Launch Blocked
+
+DK-AI-001: Paid AI capability is exposed without production abuse controls
+Entry point: app/api/chat/route.ts
+Production consequence: A public script can repeatedly trigger paid AI calls and create unexpected API costs.
+```
+
+## MVP Scope
+
+The first MVP is deliberately narrow:
+
+- Next.js App Router.
+- TypeScript.
+- Local static inspection.
+- AI/SaaS-style applications.
+- Local path or public GitHub repository input.
+
+Demo Killer does not certify that an app is production ready. It identifies launch blockers in its supported scope.
+
+## Core Direction
 
 - Diagnose why AI-built apps are still demos.
 - Produce evidence-backed launch blockers.
@@ -16,16 +48,8 @@ Core direction:
 - Generate a phased hardening path.
 - Recheck progress after fixes.
 
-First MVP wedge:
-
-- Next.js App Router.
-- TypeScript.
-- AI/SaaS-style applications.
-- Local static inspection.
-
-Demo Killer does not certify that an app is production ready. It identifies launch blockers in its supported scope.
-
 ## Documents
 
 - Product design: `docs/superpowers/specs/2026-06-17-demo-killer-product-design.md`
 - MVP implementation plan: `docs/superpowers/plans/2026-06-17-demo-killer-mvp-plan.md`
+- MVP proof: `docs/mvp-proof.md`
