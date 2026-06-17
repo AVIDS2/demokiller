@@ -21,6 +21,13 @@
     "asset": "payment state"
   },
   {
+    "ruleId": "DK-OBS-001",
+    "severity": "high",
+    "entryPoint": "app/api/admin/users/route.ts",
+    "missingControls": ["logging"],
+    "asset": "incident diagnosis"
+  },
+  {
     "ruleId": "DK-ENV-001",
     "severity": "high",
     "missingControls": ["envContract"],
@@ -31,12 +38,5 @@
     "severity": "high",
     "missingControls": ["migration"],
     "asset": "database schema"
-  },
-  {
-    "ruleId": "DK-OBS-001",
-    "severity": "high",
-    "entryPoint": "app/api/admin/users/route.ts",
-    "missingControls": ["logging"],
-    "asset": "incident diagnosis"
   }
 ]
