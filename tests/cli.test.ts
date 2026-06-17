@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { isGitHubUrl } from "../src/repository.js";
-import { runCli } from "../src/cli.js";
+import { isDirectCliInvocation, runCli } from "../src/cli.js";
 
 describe("runCli", () => {
   it("prints markdown report for inspect", async () => {
@@ -24,5 +26,14 @@ describe("isGitHubUrl", () => {
   it("detects public github repository urls", () => {
     expect(isGitHubUrl("https://github.com/AVIDS2/demo-killer")).toBe(true);
     expect(isGitHubUrl("fixtures/next-ai-saas-risky")).toBe(false);
+  });
+});
+
+describe("isDirectCliInvocation", () => {
+  it("matches relative cli paths against module urls", () => {
+    const relativePath = "dist/src/cli.js";
+    const moduleUrl = pathToFileURL(path.resolve(relativePath)).href;
+
+    expect(isDirectCliInvocation(moduleUrl, relativePath)).toBe(true);
   });
 });

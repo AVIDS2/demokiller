@@ -2,6 +2,8 @@ import { analyzeFindings } from "./rules/index.js";
 import { buildJsonReport } from "./report/json.js";
 import { renderMarkdownReport } from "./report/markdown.js";
 import { resolveRepository } from "./repository.js";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 export interface CliResult {
   exitCode: number;
@@ -34,8 +36,12 @@ export async function runCli(argv: string[] = process.argv.slice(2)): Promise<Cl
   }
 }
 
-const invokedPath = process.argv[1]?.replaceAll("\\", "/");
-if (invokedPath && import.meta.url === `file://${invokedPath}`) {
+export function isDirectCliInvocation(moduleUrl: string, argvPath?: string): boolean {
+  if (!argvPath) return false;
+  return moduleUrl === pathToFileURL(path.resolve(argvPath)).href;
+}
+
+if (isDirectCliInvocation(import.meta.url, process.argv[1])) {
   runCli().then((result) => {
     if (result.stdout) process.stdout.write(`${result.stdout}\n`);
     if (result.stderr) process.stderr.write(`${result.stderr}\n`);
