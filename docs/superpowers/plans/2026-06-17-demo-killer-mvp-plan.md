@@ -1452,7 +1452,7 @@ git commit -m "test: verify demokiller mvp flow"
 
 - First wedge: implemented through Next.js App Router fixture projects and local static inspection.
 - Evidence model: implemented in `src/types.ts` and exercised through rules.
-- Five MVP domains: covered by AI route, admin mutation auth, webhook safety, env contract, migration posture, and observability to be added after the first five rules are stable.
+- Five MVP domains: covered by AI route, admin mutation auth, webhook safety, env contract, migration posture, and observability.
 - Report requirements: covered by JSON and Markdown report tasks.
 - Recheck loop: covered by snapshot diff task.
 - MCP delay: respected; no MCP task appears in this MVP.

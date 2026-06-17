@@ -24,6 +24,9 @@ playwright-report/
 # Demo Killer runtime state
 .demokiller/
 
+# Local git worktrees
+.worktrees/
+
 # Logs
 *.log
 npm-debug.log*
