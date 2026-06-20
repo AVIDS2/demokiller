@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { analyzeFindings } from "./rules/index.js";
 import { buildInventory } from "./inventory.js";
 import { loadBenchmarkManifest } from "./benchmark.js";
