@@ -1,8 +1,54 @@
-# Demo Killer
+<p align="center">
+  <img src="assets/demokiller-banner.svg" alt="Demo Killer - Agent-native production gate" width="760" />
+</p>
 
-[English](README.en.md) · [npm](https://www.npmjs.com/package/demokiller) · [GitHub](https://github.com/AVIDS2/demokiller)
+<h1 align="center">Demo Killer</h1>
 
-杀死你的 demo，转型成真正的可生产交付落地级。
+<p align="center">
+  <strong>杀死你的 demo，转型成真正的可生产交付落地级。</strong>
+</p>
+
+<p align="center">
+  给 AI 生成项目准备的上线前生产闸门：找出 launch blocker，解释真实生产后果，并给出可复查的 hardening plan。
+</p>
+
+<p align="center">
+  <a href="README.en.md">English</a>
+  ·
+  <a href="https://www.npmjs.com/package/demokiller">npm</a>
+  ·
+  <a href="https://github.com/AVIDS2/demokiller">GitHub</a>
+  ·
+  <a href="#快速开始">快速开始</a>
+  ·
+  <a href="#agent-工作流">Agent 工作流</a>
+  ·
+  <a href="#roadmap">Roadmap</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/demokiller"><img alt="npm version" src="https://img.shields.io/npm/v/demokiller?style=flat-square&label=npm&color=cb3837"></a>
+  <a href="https://www.npmjs.com/package/demokiller"><img alt="npm downloads" src="https://img.shields.io/npm/dm/demokiller?style=flat-square&label=downloads&color=0ea5e9"></a>
+  <a href="https://github.com/AVIDS2/demokiller/blob/main/LICENSE"><img alt="license" src="https://img.shields.io/npm/l/demokiller?style=flat-square&label=license&color=22c55e"></a>
+  <a href="https://github.com/AVIDS2/demokiller/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/AVIDS2/demokiller/ci.yml?branch=main&style=flat-square&label=CI"></a>
+  <a href="https://github.com/AVIDS2/demokiller/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/AVIDS2/demokiller?style=flat-square&label=stars&color=facc15"></a>
+</p>
+
+<p align="center">
+  <strong>Evidence-backed blockers</strong>
+  ·
+  <strong>Production consequences</strong>
+  ·
+  <strong>Agent guidance</strong>
+  ·
+  <strong>Hardening plan</strong>
+  ·
+  <strong>Recheck loop</strong>
+</p>
+
+---
+
+> Using Codex, Claude Code, Cursor, Gemini CLI, or another AI coding agent? Run `npx demokiller init .` first. Demo Killer will write an agent-facing production gate so `Launch Blocked` does not get buried under cosmetic fixes.
 
 Demo Killer 是给 AI 生成项目准备的生产交付闸门。它会在上线前告诉你：这个看起来能跑的项目为什么本质上还是 demo，真实生产环境会出什么问题，以及优先修什么才能继续往上线推进。
 

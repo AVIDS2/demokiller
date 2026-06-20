@@ -1,0 +1,22 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Demo Killer</title>
+  <desc id="desc">Demo Killer banner for an agent-native production gate.</desc>
+  <rect width="1200" height="300" rx="28" fill="#080A0F"/>
+  <path d="M0 238C132 204 256 206 372 236C515 273 647 271 789 231C927 192 1062 192 1200 224V300H0V238Z" fill="#111827"/>
+  <path d="M0 64C134 29 264 31 390 69C526 110 660 111 810 65C941 25 1076 26 1200 58" stroke="#22D3EE" stroke-width="3" opacity="0.7"/>
+  <path d="M0 76C134 41 264 43 390 81C526 122 660 123 810 77C941 37 1076 38 1200 70" stroke="#EF4444" stroke-width="2" opacity="0.45"/>
+  <g opacity="0.35">
+    <rect x="72" y="54" width="1056" height="192" rx="18" stroke="#334155" stroke-width="2"/>
+    <path d="M112 104H1088" stroke="#1F2937" stroke-width="2"/>
+    <path d="M112 196H1088" stroke="#1F2937" stroke-width="2"/>
+    <path d="M220 54V246" stroke="#1F2937" stroke-width="2"/>
+    <path d="M980 54V246" stroke="#1F2937" stroke-width="2"/>
+  </g>
+  <text x="600" y="136" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="74" font-weight="900" letter-spacing="4" fill="#F8FAFC">DEMO KILLER</text>
+  <text x="600" y="178" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5" fill="#67E8F9">AGENT-NATIVE PRODUCTION GATE</text>
+  <g transform="translate(385 210)">
+    <rect width="430" height="34" rx="17" fill="#0F172A" stroke="#334155"/>
+    <circle cx="22" cy="17" r="6" fill="#EF4444"/>
+    <text x="42" y="23" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#E5E7EB">Launch Blocked means not ready for real users</text>
+  </g>
+</svg>

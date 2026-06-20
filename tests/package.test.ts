@@ -42,6 +42,7 @@ describe("npm package contract", () => {
     expect(pkg.files).toEqual(
       expect.arrayContaining([
         "dist/src",
+        "assets/demokiller-banner.svg",
         "README.md",
         "README.en.md",
         "benchmarks/github-projects.json",
