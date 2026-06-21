@@ -1,22 +1,37 @@
 <svg width="1200" height="300" viewBox="0 0 1200 300" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Demo Killer</title>
-  <desc id="desc">Demo Killer banner for an agent-native production gate.</desc>
-  <rect width="1200" height="300" rx="28" fill="#080A0F"/>
-  <path d="M0 238C132 204 256 206 372 236C515 273 647 271 789 231C927 192 1062 192 1200 224V300H0V238Z" fill="#111827"/>
-  <path d="M0 64C134 29 264 31 390 69C526 110 660 111 810 65C941 25 1076 26 1200 58" stroke="#22D3EE" stroke-width="3" opacity="0.7"/>
-  <path d="M0 76C134 41 264 43 390 81C526 122 660 123 810 77C941 37 1076 38 1200 70" stroke="#EF4444" stroke-width="2" opacity="0.45"/>
-  <g opacity="0.35">
-    <rect x="72" y="54" width="1056" height="192" rx="18" stroke="#334155" stroke-width="2"/>
-    <path d="M112 104H1088" stroke="#1F2937" stroke-width="2"/>
-    <path d="M112 196H1088" stroke="#1F2937" stroke-width="2"/>
-    <path d="M220 54V246" stroke="#1F2937" stroke-width="2"/>
-    <path d="M980 54V246" stroke="#1F2937" stroke-width="2"/>
+  <desc id="desc">Minimal banner for the Demo Killer production gate.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1200" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#080A0F"/>
+      <stop offset="1" stop-color="#0B1020"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" rx="28" fill="url(#panel)"/>
+  <rect x="40" y="28" width="1120" height="244" rx="22" fill="#090D14" stroke="#20283A" stroke-width="1.5"/>
+
+  <rect x="40" y="28" width="1120" height="2" fill="#22D3EE" opacity="0.75"/>
+  <rect x="40" y="30" width="1120" height="1" fill="#EF4444" opacity="0.55"/>
+
+  <text x="78" y="74" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="4" fill="#94A3B8">OPEN SOURCE</text>
+  <text x="1122" y="74" text-anchor="end" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="4" fill="#94A3B8">NPM PACKAGE</text>
+
+  <line x1="74" y1="96" x2="1126" y2="96" stroke="#1F2937" stroke-width="1"/>
+
+  <text x="600" y="146" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="3.5" fill="#F8FAFC">DEMO KILLER</text>
+  <text x="600" y="176" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="6" fill="#67E8F9">AGENT-NATIVE PRODUCTION GATE</text>
+
+  <g transform="translate(418 198)">
+    <rect width="364" height="30" rx="15" fill="#0F172A" stroke="#263146"/>
+    <circle cx="20" cy="15" r="4.5" fill="#EF4444"/>
+    <text x="35" y="20" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#E5E7EB">Launch Blocked means not ready for real users</text>
   </g>
-  <text x="600" y="136" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="74" font-weight="900" letter-spacing="4" fill="#F8FAFC">DEMO KILLER</text>
-  <text x="600" y="178" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="5" fill="#67E8F9">AGENT-NATIVE PRODUCTION GATE</text>
-  <g transform="translate(385 210)">
-    <rect width="430" height="34" rx="17" fill="#0F172A" stroke="#334155"/>
-    <circle cx="22" cy="17" r="6" fill="#EF4444"/>
-    <text x="42" y="23" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#E5E7EB">Launch Blocked means not ready for real users</text>
+
+  <g opacity="0.38">
+    <line x1="92" y1="238" x2="1108" y2="238" stroke="#1F2937" stroke-width="1"/>
+    <line x1="92" y1="220" x2="1108" y2="220" stroke="#1F2937" stroke-width="1"/>
   </g>
+
+  <text x="600" y="252" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12" font-weight="700" letter-spacing="5" fill="#94A3B8">EVIDENCE-BACKED BLOCKERS · HARDENING PLAN · RECHECK LOOP</text>
 </svg>
