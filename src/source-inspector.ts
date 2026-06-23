@@ -38,6 +38,16 @@ export async function inspectRouteSource(
   if (text.includes("prisma.") && text.match(/\.(delete|update|create|upsert)\s*\(/)) {
     pushUnique(capabilities, "mutatesDatabase");
   }
+  if (text.includes("prisma.") && text.match(/\.(findFirst|findMany|findUnique)\s*\(/)) {
+    pushUnique(capabilities, "readsDatabase");
+  }
+  if (
+    text.match(/await\s+(request|req)\.json\s*\(/) ||
+    text.match(/\b(request|req)\.body\b/)
+  ) {
+    pushUnique(capabilities, "consumesRequestBody");
+  }
+
   if (text.match(/\bauth\s*\(/) || text.includes("getServerSession") || text.includes("currentUser")) {
     pushUnique(controls, "auth");
   }
@@ -59,6 +69,23 @@ export async function inspectRouteSource(
       .some((call) => call.getText().startsWith("console."))
   ) {
     pushUnique(controls, "logging");
+  }
+  if (
+    text.match(/\bimport\b.*\bfrom\b.*['"]zod['"]/) ||
+    text.match(/\bimport\b.*\bfrom\b.*['"]yup['"]/) ||
+    text.match(/\bimport\b.*\bfrom\b.*['"]joi['"]/) ||
+    text.match(/\.parse\s*\(/) ||
+    text.match(/\.safeParse\s*\(/) ||
+    text.match(/\.validate\s*\(/)
+  ) {
+    pushUnique(controls, "inputValidation");
+  }
+  if (
+    sourceFile.getDescendantsOfKind(SyntaxKind.TryStatement).length > 0 ||
+    text.match(/\.catch\s*\(/) ||
+    text.match(/error\s*[,)]/)
+  ) {
+    pushUnique(controls, "errorHandling");
   }
 
   return { path: relativePath, capabilities, controls, envVars, line };

@@ -3,9 +3,12 @@ import { inspectRouteSource } from "../source-inspector.js";
 import type { Finding } from "../types.js";
 import { adminMutationAuthRule } from "./admin-mutation-auth.js";
 import { envContractRule } from "./env-contract.js";
+import { errorLeakRule } from "./error-leak.js";
+import { inputValidationRule } from "./input-validation.js";
 import { migrationPostureRule } from "./migration-posture.js";
 import { observabilityRule } from "./observability.js";
 import { publicAiRouteRule } from "./public-ai-route.js";
+import { sensitiveDataRule } from "./sensitive-data.js";
 import { webhookSafetyRule } from "./webhook-safety.js";
 
 async function readDeclaredEnvVars(root: string, envExamplePath?: string): Promise<string[]> {
@@ -36,6 +39,9 @@ export async function analyzeFindings(root: string): Promise<Finding[]> {
     ...routeEvidence.flatMap(adminMutationAuthRule),
     ...routeEvidence.flatMap(webhookSafetyRule),
     ...routeEvidence.flatMap(observabilityRule),
+    ...routeEvidence.flatMap(inputValidationRule),
+    ...routeEvidence.flatMap(errorLeakRule),
+    ...routeEvidence.flatMap(sensitiveDataRule),
     ...envContractRule(inventory, usedEnvVars, declaredEnvVars),
     ...migrationPostureRule(inventory),
   ];
