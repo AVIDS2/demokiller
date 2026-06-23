@@ -2,6 +2,7 @@ import { buildInventory } from "../inventory.js";
 import { inspectRouteSource } from "../source-inspector.js";
 import type { Finding } from "../types.js";
 import { adminMutationAuthRule } from "./admin-mutation-auth.js";
+import { corsWildcardRule } from "./cors-wildcard.js";
 import { envContractRule } from "./env-contract.js";
 import { errorLeakRule } from "./error-leak.js";
 import { inputValidationRule } from "./input-validation.js";
@@ -39,6 +40,7 @@ export async function analyzeFindings(root: string): Promise<Finding[]> {
     ...routeEvidence.flatMap(adminMutationAuthRule),
     ...routeEvidence.flatMap(webhookSafetyRule),
     ...routeEvidence.flatMap(observabilityRule),
+    ...routeEvidence.flatMap(corsWildcardRule),
     ...routeEvidence.flatMap(inputValidationRule),
     ...routeEvidence.flatMap(errorLeakRule),
     ...routeEvidence.flatMap(sensitiveDataRule),

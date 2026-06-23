@@ -187,6 +187,7 @@ Demo Killer 现在最适合检查这类项目：
 | `DK-INPUT-001` | API 路由是否直接消费请求 body 而无 schema 校验 |
 | `DK-ERR-001` | API 路由是否缺少错误处理，可能泄露内部信息 |
 | `DK-DATA-001` | 数据库查询结果是否可能未经字段过滤直接返回 |
+| `DK-CORS-001` | API 路由是否允许任意来源的跨域请求 |
 | `DK-ENV-001` | 生产环境变量是否有明确 env contract |
 | `DK-DB-001` | Prisma schema 是否缺少 migration 证据 |
 | `DK-OBS-001` | 关键 mutation 路径是否缺少诊断日志 |

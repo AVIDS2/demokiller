@@ -87,6 +87,14 @@ export async function inspectRouteSource(
   ) {
     pushUnique(controls, "errorHandling");
   }
+  if (
+    text.includes("Access-Control-Allow-Origin") ||
+    text.match(/\bcors\s*\(\s*\)/) ||
+    text.match(/\bcors\s*\(\s*\{\s*\}\s*\)/) ||
+    text.match(/origin:\s*['"]?\*['"]?/)
+  ) {
+    pushUnique(controls, "corsWildcard");
+  }
 
   return { path: relativePath, capabilities, controls, envVars, line };
 }

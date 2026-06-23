@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  An open-source production-readiness gate for AI-built software. The current release connects to coding agents through the npm CLI and agent guidance, with MCP, Agent Skills, plugins, and CI on the roadmap.
+  An open-source production-readiness gate for AI-built software. The current release connects to coding agents through the npm CLI, MCP server, Agent Skills, and agent guidance, with plugins and CI on the roadmap.
 </p>
 
 <p align="center">
@@ -66,7 +66,7 @@ The current release is centered on the npm CLI and agent guidance. The roadmap e
   <tr>
     <td><strong>Package</strong><br><code>demokiller</code></td>
     <td><strong>Runtime</strong><br>Node 18+</td>
-    <td><strong>Current entry points</strong><br>npm CLI · Agent guidance</td>
+    <td><strong>Current entry points</strong><br>npm CLI · MCP · Agent Skills · Agent guidance</td>
   </tr>
   <tr>
     <td><strong>Output</strong><br>Markdown · JSON</td>
@@ -74,8 +74,8 @@ The current release is centered on the npm CLI and agent guidance. The roadmap e
     <td><strong>Gate</strong><br><code>Launch Blocked</code></td>
   </tr>
   <tr>
-    <td><strong>Current commands</strong><br><code>inspect</code> · <code>init</code> · <code>benchmark</code></td>
-    <td><strong>Planned entry points</strong><br>MCP · Agent Skills · Plugin · CI</td>
+    <td><strong>Current commands</strong><br><code>inspect</code> · <code>init</code> · <code>benchmark</code> · <code>mcp</code></td>
+    <td><strong>Planned entry points</strong><br>Plugin · CI</td>
     <td><strong>Use cases</strong><br>Pre-launch · Handoff · Agent hardening loop</td>
   </tr>
 </table>
@@ -119,8 +119,11 @@ npx demokiller inspect . --markdown
 
 ```text
 .demokiller/AGENT.md
+.claude/skills/demokiller/SKILL.md
 AGENTS.md
 ```
+
+If your agent supports MCP (Claude Code, Cursor, Claude Desktop), you can also configure the MCP server directly. See [MCP Server](#mcp-server).
 
 After that, agents such as Codex, Claude Code, Cursor, Gemini CLI, and other coding agents can see that Demo Killer is the pre-launch production gate. A `Launch Blocked` verdict should stop release, deployment, or handoff work.
 
@@ -156,6 +159,7 @@ That is what separates it from generic linters, SAST tools, dependency scanners,
 | `npx demokiller inspect . --markdown` | Inspect the current project and print a human report |
 | `npx demokiller inspect . --json` | Print agent/CI-readable JSON |
 | `npx demokiller inspect https://github.com/owner/repo --markdown` | Inspect a public GitHub repository |
+| `npx demokiller-mcp` | Start MCP server for Claude / Cursor clients |
 | `demokiller benchmark <manifest-path>` | Run a benchmark manifest |
 
 Global install is also supported:
@@ -181,6 +185,10 @@ Current rules focus on high-signal pre-launch risks:
 | `DK-AI-001` | Public paid AI capability without auth, quota, rate limiting, or abuse logging |
 | `DK-AUTH-001` | Admin/data mutation routes without authentication and authorization |
 | `DK-WEBHOOK-001` | Payment webhooks without signature verification and idempotency |
+| `DK-INPUT-001` | API routes consuming request body without schema validation |
+| `DK-ERR-001` | API routes without error handling that may leak internals |
+| `DK-DATA-001` | Database read results returned without field filtering |
+| `DK-CORS-001` | API routes allowing requests from any origin |
 | `DK-ENV-001` | Missing production environment contract |
 | `DK-DB-001` | Prisma schema without migration evidence |
 | `DK-OBS-001` | Critical mutation path without diagnostic logging |
@@ -202,6 +210,12 @@ Start with the verdict and Phase 0 findings:
 
 ## For Agents
 
+### Option 1: MCP (Recommended)
+
+If your agent supports MCP, configure `demokiller-mcp` and the agent can call `inspect_project`, `list_launch_blockers`, and `generate_hardening_plan` directly. See [MCP Server](#mcp-server).
+
+### Option 2: CLI + Agent Guidance
+
 Recommended workflow before handoff:
 
 ```powershell
@@ -217,6 +231,71 @@ Then have your agent:
 4. Move to deployment validation, load testing, security review, and human review after blockers are gone.
 
 Demo Killer does not write application code for your agent. It gives the agent an executable, recheckable production-readiness gate.
+
+## MCP Server
+
+Demo Killer includes an MCP server for Claude Code, Cursor, Claude Desktop, and other MCP clients.
+
+### Available Tools
+
+| Tool | Purpose |
+| --- | --- |
+| `inspect_project` | Full production-readiness inspection returning verdict, findings, and hardening plan |
+| `list_launch_blockers` | Return only blocker-severity findings for fast go/no-go decisions |
+| `generate_hardening_plan` | Return a phased hardening plan to guide the fix sequence |
+
+### Configuration
+
+**Claude Code** — add to `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "demokiller": {
+      "command": "npx",
+      "args": ["-y", "demokiller-mcp"]
+    }
+  }
+}
+```
+
+**Cursor** — add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "demokiller": {
+      "command": "npx",
+      "args": ["-y", "demokiller-mcp"]
+    }
+  }
+}
+```
+
+**Claude Desktop** — add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "demokiller": {
+      "command": "npx",
+      "args": ["-y", "demokiller-mcp"]
+    }
+  }
+}
+```
+
+## Agent Skill
+
+`demokiller init .` writes `.claude/skills/demokiller/SKILL.md` following the [Agent Skills](https://agentskills.io) open standard. Claude Code, Cursor, Copilot, Gemini CLI, and other compatible agents will recognize it automatically.
+
+Usage:
+
+- **Manual**: Type `/demokiller` in Claude Code to run a check and fix in phase order.
+- **Auto-trigger**: When the conversation involves launch, deploy, release, or go-live, the agent loads this skill automatically.
+- **MCP integration**: If `demokiller-mcp` is configured, the agent can call tools directly without CLI.
+
+The skill file is idempotent — re-running `demokiller init .` does not overwrite a customized skill.
 
 ## Development And Contribution
 
@@ -249,8 +328,7 @@ npm pack --dry-run
 
 ## Roadmap
 
-- A fuller MCP server exposing `inspect_project`, `list_launch_blockers`, and `generate_hardening_plan`.
-- Skills and plugin entry points for Codex, Claude Code, Cursor, and similar tools.
+- Plugin entry points for non-MCP, non-Skill agents.
 - GitHub Actions and PR comments for team pre-launch review.
 - Broader scope: more frameworks, more production risk domains, more benchmark samples.
 
