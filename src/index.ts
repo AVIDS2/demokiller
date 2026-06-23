@@ -8,6 +8,7 @@ export { buildJsonReport } from "./report/json.js";
 export { renderMarkdownReport } from "./report/markdown.js";
 export { resolveRepository } from "./repository.js";
 export { analyzeFindings } from "./rules/index.js";
+export type { AnalysisResult } from "./rules/index.js";
 export { inspectRouteSource } from "./source-inspector.js";
 export { diffSnapshots } from "./state.js";
 export { createMcpServer, runInspection } from "./mcp.js";

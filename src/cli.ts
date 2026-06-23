@@ -8,10 +8,12 @@ import { buildJsonReport } from "./report/json.js";
 import { renderBenchmarkMarkdown } from "./report/benchmark-markdown.js";
 import { renderMarkdownReport } from "./report/markdown.js";
 import { resolveRepository } from "./repository.js";
+import { diffSnapshots } from "./state.js";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { Finding } from "./types.js";
+import type { AnalysisReport, Finding } from "./types.js";
 import type { ResolvedRepository } from "./repository.js";
+import type { ProjectInventory } from "./inventory.js";
 
 export interface CliResult {
   exitCode: number;
@@ -21,7 +23,7 @@ export interface CliResult {
 
 export interface CliDependencies {
   resolveRepository(input: string): Promise<ResolvedRepository>;
-  analyzeFindings(root: string): Promise<Finding[]>;
+  analyzeFindings(root: string): Promise<{ findings: Finding[]; inventory: ProjectInventory }>;
   hasSupportedProjectEvidence(root: string): Promise<boolean>;
 }
 
@@ -37,8 +39,24 @@ const defaultDependencies: CliDependencies = {
 const usage = [
   "Usage: demokiller init [project-root]",
   "       demokiller inspect [project-root-or-github-url] [--json|--markdown]",
+  "       demokiller recheck [project-root] [--snapshot <path>] [--json|--markdown]",
   "       demokiller benchmark [manifest-path]",
 ].join("\n");
+
+const DEFAULT_SNAPSHOT = ".demokiller/last-report.json";
+
+async function runInspection(
+  input: string,
+  dependencies: CliDependencies,
+): Promise<{ report: AnalysisReport; resolved: ResolvedRepository }> {
+  const resolved = await dependencies.resolveRepository(input);
+  const { findings, inventory } = await dependencies.analyzeFindings(resolved.root);
+  const hasEvidence = inventory.stack === "nextjs" && inventory.apiRoutes.length > 0;
+  const report = buildJsonReport(findings, new Date().toISOString(), {
+    hasSupportedProjectEvidence: hasEvidence,
+  });
+  return { report, resolved };
+}
 
 export async function runCli(
   argv: string[] = process.argv.slice(2),
@@ -82,12 +100,10 @@ export async function runCli(
       inspectRepository: async (sample) => {
         const resolved = await dependencies.resolveRepository(sample.repo);
         try {
-          const findings = await dependencies.analyzeFindings(resolved.root);
-          const hasSupportedProjectEvidence = await dependencies.hasSupportedProjectEvidence(
-            resolved.root,
-          );
+          const { findings, inventory } = await dependencies.analyzeFindings(resolved.root);
+          const hasEvidence = inventory.stack === "nextjs" && inventory.apiRoutes.length > 0;
           return buildJsonReport(findings, new Date().toISOString(), {
-            hasSupportedProjectEvidence,
+            hasSupportedProjectEvidence: hasEvidence,
           });
         } finally {
           await resolved.cleanup?.();
@@ -102,38 +118,85 @@ export async function runCli(
     };
   }
 
-  if (command !== "inspect") {
-    return {
-      exitCode: 1,
-      stdout: usage,
-      stderr: "",
-    };
-  }
+  if (command === "recheck") {
+    const snapshotIdx = argv.indexOf("--snapshot");
+    const snapshotPath =
+      snapshotIdx >= 0 && argv[snapshotIdx + 1] ? argv[snapshotIdx + 1] : DEFAULT_SNAPSHOT;
 
-  try {
-    const resolved = await dependencies.resolveRepository(input);
     try {
-      const findings = await dependencies.analyzeFindings(resolved.root);
-      const hasSupportedProjectEvidence = await dependencies.hasSupportedProjectEvidence(
-        resolved.root,
-      );
-      const report = buildJsonReport(findings, new Date().toISOString(), {
-        hasSupportedProjectEvidence,
-      });
-      const stdout = wantsJson ? JSON.stringify(report, null, 2) : renderMarkdownReport(report);
-
-      return { exitCode: 0, stdout, stderr: "" };
-    } finally {
+      const { promises: fs } = await import("node:fs");
+      const previous: AnalysisReport = JSON.parse(await fs.readFile(snapshotPath, "utf8"));
+      const { report: current, resolved } = await runInspection(input, dependencies);
       await resolved.cleanup?.();
+
+      const diff = diffSnapshots(previous, current);
+      const result = {
+        previousVerdict: diff.previousVerdict,
+        currentVerdict: diff.currentVerdict,
+        resolved: diff.resolvedRuleIds,
+        remaining: diff.remainingRuleIds,
+        newFindings: diff.newRuleIds,
+      };
+
+      if (wantsJson) {
+        return { exitCode: 0, stdout: JSON.stringify(result, null, 2), stderr: "" };
+      }
+
+      const lines = [
+        `Previous verdict: ${diff.previousVerdict}`,
+        `Current verdict:  ${diff.currentVerdict}`,
+        "",
+      ];
+      if (diff.resolvedRuleIds.length > 0) {
+        lines.push(`Resolved (${diff.resolvedRuleIds.length}):`, ...diff.resolvedRuleIds.map((id) => `  + ${id}`), "");
+      }
+      if (diff.newRuleIds.length > 0) {
+        lines.push(`New findings (${diff.newRuleIds.length}):`, ...diff.newRuleIds.map((id) => `  ! ${id}`), "");
+      }
+      if (diff.remainingRuleIds.length > 0) {
+        lines.push(`Remaining (${diff.remainingRuleIds.length}):`, ...diff.remainingRuleIds.map((id) => `  - ${id}`));
+      }
+      return { exitCode: 0, stdout: lines.join("\n"), stderr: "" };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: `Failed to recheck: ${message}`,
+      };
     }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      exitCode: 1,
-      stdout: "",
-      stderr: `Failed to inspect repository: ${message}`,
-    };
   }
+
+  if (command === "inspect") {
+    try {
+      const { report, resolved } = await runInspection(input, dependencies);
+
+      try {
+        const { promises: fs } = await import("node:fs");
+        await fs.mkdir(path.dirname(DEFAULT_SNAPSHOT), { recursive: true });
+        await fs.writeFile(DEFAULT_SNAPSHOT, JSON.stringify(report, null, 2), "utf8");
+      } catch {
+        // snapshot save is best-effort
+      }
+
+      const stdout = wantsJson ? JSON.stringify(report, null, 2) : renderMarkdownReport(report);
+      await resolved.cleanup?.();
+      return { exitCode: 0, stdout, stderr: "" };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        exitCode: 1,
+        stdout: "",
+        stderr: `Failed to inspect repository: ${message}`,
+      };
+    }
+  }
+
+  return {
+    exitCode: 1,
+    stdout: usage,
+    stderr: "",
+  };
 }
 
 export function isDirectCliInvocation(moduleUrl: string, argvPath?: string): boolean {

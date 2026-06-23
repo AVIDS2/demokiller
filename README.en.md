@@ -189,6 +189,7 @@ Current rules focus on high-signal pre-launch risks:
 | `DK-ERR-001` | API routes without error handling that may leak internals |
 | `DK-DATA-001` | Database read results returned without field filtering |
 | `DK-CORS-001` | API routes allowing requests from any origin |
+| `DK-DEBUG-001` | Production routes containing console.log or debug statements |
 | `DK-ENV-001` | Missing production environment contract |
 | `DK-DB-001` | Prisma schema without migration evidence |
 | `DK-OBS-001` | Critical mutation path without diagnostic logging |

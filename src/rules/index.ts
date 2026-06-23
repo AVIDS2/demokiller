@@ -1,8 +1,9 @@
-import { buildInventory } from "../inventory.js";
+import { buildInventory, type ProjectInventory } from "../inventory.js";
 import { inspectRouteSource } from "../source-inspector.js";
 import type { Finding } from "../types.js";
 import { adminMutationAuthRule } from "./admin-mutation-auth.js";
 import { corsWildcardRule } from "./cors-wildcard.js";
+import { debugLeakRule } from "./debug-leak.js";
 import { envContractRule } from "./env-contract.js";
 import { errorLeakRule } from "./error-leak.js";
 import { inputValidationRule } from "./input-validation.js";
@@ -27,7 +28,12 @@ async function readDeclaredEnvVars(root: string, envExamplePath?: string): Promi
     .filter((name) => name.length > 0);
 }
 
-export async function analyzeFindings(root: string): Promise<Finding[]> {
+export interface AnalysisResult {
+  findings: Finding[];
+  inventory: ProjectInventory;
+}
+
+export async function analyzeFindings(root: string): Promise<AnalysisResult> {
   const inventory = await buildInventory(root);
   const routeEvidence = await Promise.all(
     inventory.apiRoutes.map((route) => inspectRouteSource(root, route)),
@@ -35,16 +41,19 @@ export async function analyzeFindings(root: string): Promise<Finding[]> {
   const usedEnvVars = Array.from(new Set(routeEvidence.flatMap((route) => route.envVars)));
   const declaredEnvVars = await readDeclaredEnvVars(root, inventory.envExamplePath);
 
-  return [
+  const findings = [
     ...routeEvidence.flatMap(publicAiRouteRule),
     ...routeEvidence.flatMap(adminMutationAuthRule),
     ...routeEvidence.flatMap(webhookSafetyRule),
     ...routeEvidence.flatMap(observabilityRule),
     ...routeEvidence.flatMap(corsWildcardRule),
+    ...routeEvidence.flatMap(debugLeakRule),
     ...routeEvidence.flatMap(inputValidationRule),
     ...routeEvidence.flatMap(errorLeakRule),
     ...routeEvidence.flatMap(sensitiveDataRule),
     ...envContractRule(inventory, usedEnvVars, declaredEnvVars),
     ...migrationPostureRule(inventory),
   ];
+
+  return { findings, inventory };
 }

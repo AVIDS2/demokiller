@@ -21,6 +21,13 @@
     "asset": "incident diagnosis"
   },
   {
+    "ruleId": "DK-DEBUG-001",
+    "severity": "high",
+    "entryPoint": "app/api/stripe/webhook/route.ts",
+    "missingControls": ["debugGuard"],
+    "asset": "operational hygiene"
+  },
+  {
     "ruleId": "DK-INPUT-001",
     "severity": "blocker",
     "entryPoint": "app/api/admin/users/route.ts",

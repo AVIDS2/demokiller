@@ -6,6 +6,35 @@ import { pathToFileURL } from "node:url";
 import { isGitHubUrl } from "../src/repository.js";
 import { isDirectCliInvocation, runCli } from "../src/cli.js";
 
+function mockDeps(overrides: Record<string, unknown> = {}) {
+  return {
+    resolveRepository: async () => ({ root: "fixtures/next-ai-saas-risky" }),
+    hasSupportedProjectEvidence: async () => true,
+    analyzeFindings: async () => ({
+      findings: [
+        {
+          ruleId: "DK-AI-001",
+          title: "AI",
+          severity: "blocker",
+          confidence: "high",
+          missingControls: [],
+          consequence: "test",
+          acceptanceCriteria: [],
+          evidence: [],
+        },
+      ],
+      inventory: {
+        root: ".",
+        stack: "nextjs",
+        apiRoutes: ["app/api/chat/route.ts"],
+        migrationPaths: [],
+        packageJson: { dependencies: {}, devDependencies: {} },
+      },
+    }),
+    ...overrides,
+  };
+}
+
 describe("runCli", () => {
   it("prints help with a successful exit code", async () => {
     const result = await runCli(["--help"]);
@@ -14,6 +43,7 @@ describe("runCli", () => {
     expect(result.stdout).toContain("Usage: demokiller init [project-root]");
     expect(result.stdout).toContain("demokiller inspect");
     expect(result.stdout).toContain("demokiller benchmark");
+    expect(result.stdout).toContain("demokiller recheck");
   });
 
   it("prints markdown report for inspect", async () => {
@@ -40,42 +70,60 @@ describe("runCli", () => {
     expect(parsed.verdict).toBe("Insufficient Evidence");
   });
 
+  it("returns Production Candidate for hardened fixture", async () => {
+    const result = await runCli(["inspect", "fixtures/next-ai-saas-hardened", "--json"]);
+    const parsed = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(parsed.verdict).toBe("Production Candidate");
+    expect(parsed.findings).toEqual([]);
+  });
+
   it("prints benchmark report with injected dependencies", async () => {
     const result = await runCli(["benchmark", "benchmarks/github-projects.json"], {
       resolveRepository: async () => ({ root: "fixtures/next-ai-saas-risky" }),
       hasSupportedProjectEvidence: async () => true,
-      analyzeFindings: async () => [
-        {
-          ruleId: "DK-AI-001",
-          title: "AI",
-          severity: "blocker",
-          confidence: "high",
-          missingControls: [],
-          consequence: "test",
-          acceptanceCriteria: [],
-          evidence: [],
+      analyzeFindings: async () => ({
+        findings: [
+          {
+            ruleId: "DK-AI-001",
+            title: "AI",
+            severity: "blocker",
+            confidence: "high",
+            missingControls: [],
+            consequence: "test",
+            acceptanceCriteria: [],
+            evidence: [],
+          },
+          {
+            ruleId: "DK-DB-001",
+            title: "DB",
+            severity: "high",
+            confidence: "medium",
+            missingControls: [],
+            consequence: "test",
+            acceptanceCriteria: [],
+            evidence: [],
+          },
+          {
+            ruleId: "DK-WEBHOOK-001",
+            title: "Webhook",
+            severity: "blocker",
+            confidence: "high",
+            missingControls: [],
+            consequence: "test",
+            acceptanceCriteria: [],
+            evidence: [],
+          },
+        ],
+        inventory: {
+          root: ".",
+          stack: "nextjs",
+          apiRoutes: ["app/api/chat/route.ts"],
+          migrationPaths: [],
+          packageJson: { dependencies: {}, devDependencies: {} },
         },
-        {
-          ruleId: "DK-DB-001",
-          title: "DB",
-          severity: "high",
-          confidence: "medium",
-          missingControls: [],
-          consequence: "test",
-          acceptanceCriteria: [],
-          evidence: [],
-        },
-        {
-          ruleId: "DK-WEBHOOK-001",
-          title: "Webhook",
-          severity: "blocker",
-          confidence: "high",
-          missingControls: [],
-          consequence: "test",
-          acceptanceCriteria: [],
-          evidence: [],
-        },
-      ],
+      }),
     });
 
     expect(result.exitCode).toBe(0);
@@ -88,7 +136,16 @@ describe("runCli", () => {
       resolveRepository: async () => {
         throw new Error("raw git error");
       },
-      analyzeFindings: async () => [],
+      analyzeFindings: async () => ({
+        findings: [],
+        inventory: {
+          root: ".",
+          stack: "unknown" as const,
+          apiRoutes: [],
+          migrationPaths: [],
+          packageJson: { dependencies: {}, devDependencies: {} },
+        },
+      }),
       hasSupportedProjectEvidence: async () => false,
     });
 
@@ -111,6 +168,97 @@ describe("runCli", () => {
       expect(result.stdout).toContain("AGENTS.md");
     } finally {
       await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("recheck compares snapshot and reports diff", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "demokiller-recheck-"));
+    const snapshotPath = path.join(tmpDir, "snapshot.json");
+    const snapshot = {
+      verdict: "Launch Blocked",
+      supportedScope: [],
+      findings: [
+        {
+          ruleId: "DK-AI-001",
+          title: "AI",
+          severity: "blocker",
+          confidence: "high",
+          missingControls: [],
+          consequence: "test",
+          acceptanceCriteria: [],
+          evidence: [],
+        },
+        {
+          ruleId: "DK-DB-001",
+          title: "DB",
+          severity: "high",
+          confidence: "medium",
+          missingControls: [],
+          consequence: "test",
+          acceptanceCriteria: [],
+          evidence: [],
+        },
+      ],
+      hardeningPlan: { summary: "", phases: [], recheckCommand: "" },
+      generatedAt: new Date().toISOString(),
+    };
+    await fs.writeFile(snapshotPath, JSON.stringify(snapshot), "utf8");
+
+    try {
+      const result = await runCli([
+        "recheck",
+        "fixtures/next-ai-saas-hardened",
+        "--snapshot",
+        snapshotPath,
+      ]);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain("Previous verdict: Launch Blocked");
+      expect(result.stdout).toContain("Current verdict:");
+      expect(result.stdout).toContain("Resolved");
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("recheck outputs json with --json flag", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "demokiller-recheck-json-"));
+    const snapshotPath = path.join(tmpDir, "snapshot.json");
+    const snapshot = {
+      verdict: "Launch Blocked",
+      supportedScope: [],
+      findings: [
+        {
+          ruleId: "DK-AI-001",
+          title: "AI",
+          severity: "blocker",
+          confidence: "high",
+          missingControls: [],
+          consequence: "test",
+          acceptanceCriteria: [],
+          evidence: [],
+        },
+      ],
+      hardeningPlan: { summary: "", phases: [], recheckCommand: "" },
+      generatedAt: new Date().toISOString(),
+    };
+    await fs.writeFile(snapshotPath, JSON.stringify(snapshot), "utf8");
+
+    try {
+      const result = await runCli([
+        "recheck",
+        "fixtures/next-ai-saas-hardened",
+        "--snapshot",
+        snapshotPath,
+        "--json",
+      ]);
+
+      expect(result.exitCode).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed.previousVerdict).toBe("Launch Blocked");
+      expect(parsed.resolved).toContain("DK-AI-001");
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
     }
   });
 });

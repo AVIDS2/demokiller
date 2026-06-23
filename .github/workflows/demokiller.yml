@@ -1,0 +1,89 @@
+name: Demo Killer
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  production-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npx demokiller inspect . --json > .demokiller-report.json 2>&1 || true
+        id: inspect
+
+      - name: Post findings as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let report;
+            try {
+              report = JSON.parse(fs.readFileSync('.demokiller-report.json', 'utf8'));
+            } catch {
+              return;
+            }
+
+            const findings = report.findings || [];
+            const blockers = findings.filter(f => f.severity === 'blocker');
+            const verdict = report.verdict || 'Unknown';
+
+            const lines = [`## Demo Killer: ${verdict}`, ''];
+            if (blockers.length > 0) {
+              lines.push(`**${blockers.length} launch blocker(s) found:**`, '');
+              for (const f of blockers) {
+                lines.push(`- **${f.ruleId}** — ${f.title}`);
+                if (f.entryPoint) lines.push(`  Entry: \`${f.entryPoint}\``);
+                lines.push(`  ${f.consequence}`, '');
+              }
+            }
+            if (findings.length > blockers.length) {
+              lines.push(`<details><summary>${findings.length - blockers.length} non-blocking finding(s)</summary>`, '');
+              for (const f of findings.filter(f => f.severity !== 'blocker')) {
+                lines.push(`- **${f.ruleId}** (${f.severity}) — ${f.title}`);
+              }
+              lines.push('</details>', '');
+            }
+            if (findings.length === 0) {
+              lines.push('No findings in supported scope.');
+            }
+
+            const body = lines.join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes('## Demo Killer:'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail on launch blockers
+        run: |
+          VERDICT=$(node -e "const r=JSON.parse(require('fs').readFileSync('.demokiller-report.json','utf8'));console.log(r.verdict)")
+          if [ "$VERDICT" = "Launch Blocked" ]; then
+            echo "::error::Demo Killer: Launch Blocked — fix blockers before merging"
+            exit 1
+          fi

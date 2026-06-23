@@ -11,8 +11,11 @@ import type { AnalysisReport } from "./types.js";
 export async function runInspection(projectPath: string): Promise<AnalysisReport> {
   const resolved = await resolveRepository(projectPath);
   try {
-    const findings = await analyzeFindings(resolved.root);
-    return buildJsonReport(findings);
+    const { findings, inventory } = await analyzeFindings(resolved.root);
+    const hasEvidence = inventory.stack === "nextjs" && inventory.apiRoutes.length > 0;
+    return buildJsonReport(findings, new Date().toISOString(), {
+      hasSupportedProjectEvidence: hasEvidence,
+    });
   } finally {
     await resolved.cleanup?.();
   }

@@ -57,6 +57,9 @@ export async function inspectRouteSource(
   if (text.includes("rateLimit") || text.includes("limiter")) {
     pushUnique(controls, "rateLimit");
   }
+  if (text.includes("quota") || text.includes("usageLimit") || text.includes("monthlyLimit")) {
+    pushUnique(controls, "quota");
+  }
   if (text.includes("constructEvent") || text.includes("STRIPE_WEBHOOK_SECRET")) {
     pushUnique(controls, "signatureVerification");
   }
@@ -66,7 +69,16 @@ export async function inspectRouteSource(
   if (
     sourceFile
       .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .some((call) => call.getText().startsWith("console."))
+      .some((call) => {
+        const t = call.getText();
+        return (
+          t.startsWith("console.") ||
+          t.startsWith("logger.") ||
+          t.startsWith("log.") ||
+          t.startsWith("auditLog") ||
+          t.startsWith("structuredLog")
+        );
+      })
   ) {
     pushUnique(controls, "logging");
   }
@@ -94,6 +106,16 @@ export async function inspectRouteSource(
     text.match(/origin:\s*['"]?\*['"]?/)
   ) {
     pushUnique(controls, "corsWildcard");
+  }
+  if (
+    sourceFile
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .some((call) => {
+        const t = call.getText();
+        return t.startsWith("console.log") || t.startsWith("console.debug");
+      })
+  ) {
+    pushUnique(controls, "debugStatements");
   }
 
   return { path: relativePath, capabilities, controls, envVars, line };
