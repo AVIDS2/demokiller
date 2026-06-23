@@ -35,10 +35,10 @@ export async function inspectRouteSource(
   if (text.includes("stripe") || text.includes("Stripe")) {
     pushUnique(capabilities, "handlesPaymentProvider");
   }
-  if (text.includes("prisma.") && text.match(/\.(delete|update|create|upsert)\s*\(/)) {
+  if (text.includes("prisma.") && text.match(/\.\s*(delete|update|create|upsert)\s*\(/)) {
     pushUnique(capabilities, "mutatesDatabase");
   }
-  if (text.includes("prisma.") && text.match(/\.(findFirst|findMany|findUnique)\s*\(/)) {
+  if (text.includes("prisma.") && text.match(/\.\s*(findFirst|findMany|findUnique|findFirstOrThrow|findUniqueOrThrow)\s*\(/)) {
     pushUnique(capabilities, "readsDatabase");
   }
   if (
@@ -48,7 +48,16 @@ export async function inspectRouteSource(
     pushUnique(capabilities, "consumesRequestBody");
   }
 
-  if (text.match(/\bauth\s*\(/) || text.includes("getServerSession") || text.includes("currentUser")) {
+  if (
+    text.match(/\bauth\s*\(/) ||
+    text.includes("getServerSession") ||
+    text.includes("currentUser") ||
+    text.includes("req.user") ||
+    text.includes("req.isAuthenticated") ||
+    text.includes("passport.authenticate") ||
+    text.includes("verifyToken") ||
+    text.includes("authenticate(")
+  ) {
     pushUnique(controls, "auth");
   }
   if (text.includes("role") || text.includes("isAdmin") || text.includes("permission")) {

@@ -25,4 +25,25 @@ describe("buildInventory", () => {
       "prisma/migrations/20260101000000_init/migration.sql",
     ]);
   });
+
+  it("detects Express projects and their route files", async () => {
+    const inventory = await buildInventory("fixtures/express-ai-saas-risky");
+
+    expect(inventory.stack).toBe("express");
+    expect(inventory.apiRoutes.length).toBeGreaterThan(0);
+    expect(inventory.apiRoutes).toEqual(
+      expect.arrayContaining([
+        "src/routes/chat.ts",
+        "src/routes/admin.ts",
+        "src/routes/webhook.ts",
+      ]),
+    );
+  });
+
+  it("detects express stack even when no route files exist", async () => {
+    const inventory = await buildInventory("fixtures/unsupported-empty-node");
+
+    expect(inventory.stack).toBe("express");
+    expect(inventory.apiRoutes).toEqual([]);
+  });
 });

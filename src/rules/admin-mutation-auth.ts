@@ -2,7 +2,7 @@ import type { Finding } from "../types.js";
 import type { RouteSourceEvidence } from "../source-inspector.js";
 
 export function adminMutationAuthRule(route: RouteSourceEvidence): Finding[] {
-  if (!route.path.includes("/admin/")) return [];
+  if (!route.path.toLowerCase().includes("admin")) return [];
   if (!route.capabilities.includes("mutatesDatabase")) return [];
 
   const missingControls = ["auth", "authorization"].filter(

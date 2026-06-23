@@ -79,6 +79,16 @@ describe("runCli", () => {
     expect(parsed.findings).toEqual([]);
   });
 
+  it("detects Express projects as supported scope", async () => {
+    const result = await runCli(["inspect", "fixtures/express-ai-saas-risky", "--json"]);
+    const parsed = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(parsed.verdict).toBe("Launch Blocked");
+    expect(parsed.findings.length).toBeGreaterThan(0);
+    expect(parsed.supportedScope).toContain("Express");
+  });
+
   it("prints benchmark report with injected dependencies", async () => {
     const result = await runCli(["benchmark", "benchmarks/github-projects.json"], {
       resolveRepository: async () => ({ root: "fixtures/next-ai-saas-risky" }),

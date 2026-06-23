@@ -60,6 +60,8 @@ export function buildJsonReport(
     verdict,
     supportedScope: [
       "Next.js App Router",
+      "Express",
+      "Fastify",
       "TypeScript",
       "local static inspection",
       "AI/SaaS launch blockers",
