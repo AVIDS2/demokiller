@@ -32,6 +32,7 @@ describe("npm package contract", () => {
     expect(pkg.private).toBe(false);
     expect(pkg.bin).toEqual({
       demokiller: "dist/src/cli.js",
+      "demokiller-mcp": "dist/src/mcp.js",
     });
     expect(pkg.scripts?.prepack).toBe("npm run build");
     expect(pkg.engines?.node).toBe(">=18");

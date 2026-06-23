@@ -10,6 +10,7 @@ export { resolveRepository } from "./repository.js";
 export { analyzeFindings } from "./rules/index.js";
 export { inspectRouteSource } from "./source-inspector.js";
 export { diffSnapshots } from "./state.js";
+export { createMcpServer, runInspection } from "./mcp.js";
 export type { BenchmarkSample, BenchmarkArchetype } from "./benchmark.js";
 export type { BenchmarkResult, BenchmarkSuiteResult } from "./benchmark-runner.js";
 export type { InitFileResult, InitFileStatus, InitResult } from "./init.js";
