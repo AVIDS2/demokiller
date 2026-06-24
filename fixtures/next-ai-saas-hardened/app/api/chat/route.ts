@@ -29,8 +29,19 @@ async function checkQuota(userId: string): Promise<boolean> {
   return true;
 }
 
+const securityHeaders = {
+  "Content-Security-Policy": "default-src 'self'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+};
+
 export async function POST(request: Request) {
   try {
+    if (process.env.NODE_ENV === "production" && request.headers.get("x-forwarded-proto") !== "https") {
+      return Response.redirect(`https://${request.headers.get("host")}${request.url}`, 301);
+    }
+
     const session = await auth();
     if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
     await rateLimit(session.user.id, "chat");

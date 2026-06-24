@@ -175,6 +175,9 @@ Demo Killer 现在最适合检查这类项目：
 - Next.js App Router + TypeScript 项目。
 - Express / Fastify + TypeScript 项目，尤其是带 API route 的项目。
 - FastAPI / Flask / Django + Python 项目。
+- Gin / Echo / Fiber + Go 项目。
+- Actix / Axum + Rust 项目。
+- Spring Boot + Java 项目。
 - AI/SaaS 风格应用，尤其是带 API route、付费能力、Webhook、数据库写入的项目。
 - 本地目录，或可以公开访问的 GitHub 仓库。
 - 希望在交付前拿到一份可执行 hardening list 的团队和独立开发者。
@@ -194,7 +197,14 @@ Demo Killer 现在最适合检查这类项目：
 | `DK-SSRF-001` | HTTP 请求是否使用了可能由用户控制的 URL |
 | `DK-CMDI-001` | 路由是否执行系统命令，可能存在命令注入风险 |
 | `DK-SECRET-001` | 源码中是否包含硬编码的 API 密钥或令牌 |
+| `DK-SQLI-001` | SQL 查询是否使用字符串拼接而非参数化语句 |
+| `DK-PATH-001` | 文件系统操作是否使用了未经消毒的用户路径 |
+| `DK-INSEC-001` | 是否使用了不安全的反序列化或 eval |
+| `DK-CSP-001` | API 响应是否缺少 CSP、X-Frame-Options 等安全头 |
+| `DK-HTTPS-001` | 是否未强制 HTTPS 或缺少 HSTS |
 | `DK-LOGI-001` | 用户输入是否可能直接写入日志（日志注入） |
+| `DK-DEP-001` | 依赖是否存在已知高危漏洞（npm audit / pip-audit） |
+| `DK-DOCKER-001` | Dockerfile 是否有安全问题（root 运行、latest tag、debug 端口） |
 | `DK-ENV-001` | 生产环境变量是否有明确 env contract |
 | `DK-DB-001` | Prisma schema 是否缺少 migration 证据 |
 | `DK-OBS-001` | 关键 mutation 路径是否缺少诊断日志 |

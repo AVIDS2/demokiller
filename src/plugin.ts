@@ -1,0 +1,10 @@
+export { resolveRepository } from "./repository.js";
+export { analyzeFindings } from "./rules/index.js";
+export { inspectRouteSource } from "./source-inspector.js";
+export { diffSnapshots } from "./state.js";
+export { buildInventory } from "./inventory.js";
+export { buildJsonReport } from "./report/json.js";
+export { renderMarkdownReport } from "./report/markdown.js";
+export type { AnalysisReport, Finding, Verdict } from "./types.js";
+export type { AnalysisResult } from "./rules/index.js";
+export type { ProjectInventory, StackType } from "./inventory.js";

@@ -40,6 +40,27 @@ describe("buildInventory", () => {
     );
   });
 
+  it("detects Go Gin projects and their route files", async () => {
+    const inventory = await buildInventory("fixtures/gin-ai-saas-risky");
+
+    expect(inventory.stack).toBe("gin");
+    expect(inventory.apiRoutes.length).toBeGreaterThan(0);
+  });
+
+  it("detects Rust Actix projects and their route files", async () => {
+    const inventory = await buildInventory("fixtures/actix-ai-saas-risky");
+
+    expect(inventory.stack).toBe("actix");
+    expect(inventory.apiRoutes.length).toBeGreaterThan(0);
+  });
+
+  it("detects Java Spring Boot projects and their route files", async () => {
+    const inventory = await buildInventory("fixtures/springboot-ai-saas-risky");
+
+    expect(inventory.stack).toBe("spring-boot");
+    expect(inventory.apiRoutes.length).toBeGreaterThan(0);
+  });
+
   it("detects express stack even when no route files exist", async () => {
     const inventory = await buildInventory("fixtures/unsupported-empty-node");
 

@@ -176,6 +176,9 @@ Demo Killer currently works best for:
 - Next.js App Router + TypeScript projects.
 - Express / Fastify + TypeScript projects, especially those with API routes.
 - FastAPI / Flask / Django + Python projects.
+- Gin / Echo / Fiber + Go projects.
+- Actix / Axum + Rust projects.
+- Spring Boot + Java projects.
 - AI/SaaS-style applications, especially projects with API routes, paid capabilities, webhooks, or database writes.
 - Local directories or public GitHub repositories.
 - Teams and independent builders who want an actionable hardening list before handoff.
@@ -195,7 +198,14 @@ Current rules focus on high-signal pre-launch risks:
 | `DK-SSRF-001` | HTTP requests with potentially user-controlled URLs |
 | `DK-CMDI-001` | Routes executing system commands (command injection risk) |
 | `DK-SECRET-001` | Hardcoded API keys or secrets in source code |
+| `DK-SQLI-001` | SQL queries built with string interpolation instead of parameterized statements |
+| `DK-PATH-001` | File system access using unsanitized user-controlled paths |
+| `DK-INSEC-001` | Unsafe deserialization or eval with user input |
+| `DK-CSP-001` | API responses missing CSP, X-Frame-Options, security headers |
+| `DK-HTTPS-001` | Missing HTTPS enforcement or HSTS header |
 | `DK-LOGI-001` | User-controlled input written directly to logs |
+| `DK-DEP-001` | Dependencies with known high/critical vulnerabilities |
+| `DK-DOCKER-001` | Dockerfile security issues (root user, :latest, debug ports) |
 | `DK-ENV-001` | Missing production environment contract |
 | `DK-DB-001` | Prisma schema without migration evidence |
 | `DK-OBS-001` | Critical mutation path without diagnostic logging |

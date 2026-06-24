@@ -4,16 +4,23 @@ import type { Finding } from "../types.js";
 import { adminMutationAuthRule } from "./admin-mutation-auth.js";
 import { commandInjectionRule } from "./command-injection.js";
 import { corsWildcardRule } from "./cors-wildcard.js";
+import { cspMissingRule } from "./csp-missing.js";
 import { debugLeakRule } from "./debug-leak.js";
+import { depsVulnerabilityFindings } from "./deps-vulnerability.js";
+import { dockerSecurityFindings } from "./docker-security.js";
 import { envContractRule } from "./env-contract.js";
 import { errorLeakRule } from "./error-leak.js";
 import { hardcodedSecretRule } from "./hardcoded-secret.js";
+import { httpsEnforcementRule } from "./https-enforcement.js";
+import { insecureDeserializationRule } from "./insecure-deserialization.js";
 import { inputValidationRule } from "./input-validation.js";
 import { logInjectionRule } from "./log-injection.js";
 import { migrationPostureRule } from "./migration-posture.js";
 import { observabilityRule } from "./observability.js";
+import { pathTraversalRule } from "./path-traversal.js";
 import { publicAiRouteRule } from "./public-ai-route.js";
 import { sensitiveDataRule } from "./sensitive-data.js";
+import { sqlInjectionRule } from "./sql-injection.js";
 import { ssrfRule } from "./ssrf.js";
 import { webhookSafetyRule } from "./webhook-safety.js";
 
@@ -46,21 +53,32 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
   const declaredEnvVars = await readDeclaredEnvVars(root, inventory.envExamplePath);
 
   const findings = [
+    // Original rules
     ...routeEvidence.flatMap(publicAiRouteRule),
     ...routeEvidence.flatMap(adminMutationAuthRule),
     ...routeEvidence.flatMap(webhookSafetyRule),
     ...routeEvidence.flatMap(observabilityRule),
     ...routeEvidence.flatMap(corsWildcardRule),
     ...routeEvidence.flatMap(debugLeakRule),
+    // Security rules
     ...routeEvidence.flatMap(ssrfRule),
     ...routeEvidence.flatMap(commandInjectionRule),
     ...routeEvidence.flatMap(hardcodedSecretRule),
+    ...routeEvidence.flatMap(sqlInjectionRule),
+    ...routeEvidence.flatMap(pathTraversalRule),
+    ...routeEvidence.flatMap(insecureDeserializationRule),
+    // Quality rules
     ...routeEvidence.flatMap(inputValidationRule),
     ...routeEvidence.flatMap(errorLeakRule),
     ...routeEvidence.flatMap(logInjectionRule),
     ...routeEvidence.flatMap(sensitiveDataRule),
+    ...routeEvidence.flatMap(cspMissingRule),
+    ...routeEvidence.flatMap(httpsEnforcementRule),
+    // Project-level rules
     ...envContractRule(inventory, usedEnvVars, declaredEnvVars),
     ...migrationPostureRule(inventory),
+    ...(await depsVulnerabilityFindings(inventory)),
+    ...(await dockerSecurityFindings(inventory)),
   ];
 
   return { findings, inventory };

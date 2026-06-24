@@ -12,7 +12,8 @@ export async function runInspection(projectPath: string): Promise<AnalysisReport
   const resolved = await resolveRepository(projectPath);
   try {
     const { findings, inventory } = await analyzeFindings(resolved.root);
-    const hasEvidence = (inventory.stack === "nextjs" || inventory.stack === "express" || inventory.stack === "fastify" || inventory.stack === "flask" || inventory.stack === "fastapi" || inventory.stack === "django") && inventory.apiRoutes.length > 0;
+    const supportedStacks = ["nextjs", "express", "fastify", "flask", "fastapi", "django", "gin", "echo", "fiber", "actix", "axum", "spring-boot"];
+    const hasEvidence = supportedStacks.includes(inventory.stack) && inventory.apiRoutes.length > 0;
     return buildJsonReport(findings, new Date().toISOString(), {
       hasSupportedProjectEvidence: hasEvidence,
     });
@@ -75,7 +76,7 @@ export async function handleGenerateHardeningPlan(projectPath: string): Promise<
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "demokiller",
-    version: "0.2.0",
+    version: "0.3.0",
   });
 
   server.tool(

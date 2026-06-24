@@ -32,7 +32,8 @@ const defaultDependencies: CliDependencies = {
   analyzeFindings,
   hasSupportedProjectEvidence: async (root) => {
     const inventory = await buildInventory(root);
-    return (inventory.stack === "nextjs" || inventory.stack === "express" || inventory.stack === "fastify" || inventory.stack === "flask" || inventory.stack === "fastapi" || inventory.stack === "django") && inventory.apiRoutes.length > 0;
+    const supportedStacks = ["nextjs", "express", "fastify", "flask", "fastapi", "django", "gin", "echo", "fiber", "actix", "axum", "spring-boot"];
+    return supportedStacks.includes(inventory.stack) && inventory.apiRoutes.length > 0;
   },
 };
 

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0
+
+### Features
+
+- **Go support**: Gin, Echo, Fiber framework detection via `go.mod` parsing and Go route pattern scanning.
+- **Rust support**: Actix, Axum framework detection via `Cargo.toml` parsing and Rust route attribute scanning.
+- **Java support**: Spring Boot framework detection via `build.gradle`/`pom.xml` parsing and annotation scanning.
+- **8 new rules** (22 total):
+  - `DK-SQLI-001` — SQL queries built with string interpolation
+  - `DK-PATH-001` — File access with user-controlled paths
+  - `DK-INSEC-001` — Unsafe deserialization or eval
+  - `DK-CSP-001` — Missing security headers
+  - `DK-HTTPS-001` — Missing HTTPS enforcement / HSTS
+  - `DK-DEP-001` — Known dependency vulnerabilities (npm audit / pip-audit)
+  - `DK-DOCKER-001` — Dockerfile security issues
+- **Plugin entry point**: `src/plugin.ts` exports `runInspection`, `buildInventory`, `analyzeFindings` as a programmatic API.
+- **Dependency audit integration**: Automatically runs `npm audit` or `pip-audit` and includes high/critical findings.
+- **Docker security check**: Scans Dockerfile for root user, :latest tag, exposed debug ports, missing HEALTHCHECK.
+
+### Architecture
+
+- Source inspector extended with Go, Rust, Java text-based detection patterns.
+- Inventory supports 6 language ecosystems (JS/TS, Python, Go, Rust, Java) with auto-detection cascade.
+- `ProjectInventory` now includes `hasDockerfile` field.
+
 ## 0.2.0
 
 ### Features

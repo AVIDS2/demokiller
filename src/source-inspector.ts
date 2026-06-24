@@ -78,6 +78,30 @@ function detectCapabilitiesFromText(text: string, capabilities: string[]) {
   ) {
     pushUnique(capabilities, "commandExecution");
   }
+
+  // ── Go capabilities ────────────────────────────────────────────
+  if (text.match(/\bc\s*\.\s*(ShouldBindJSON|Bind|BindJSON|ShouldBind)\s*\(/)) {
+    pushUnique(capabilities, "consumesRequestBody");
+  }
+  if (text.match(/\bdb\s*\.\s*(Create|Delete|Update|Save|Where)\s*\(/)) {
+    pushUnique(capabilities, "mutatesDatabase");
+  }
+  if (text.match(/\bdb\s*\.\s*(Find|First|Take|FindOne)\s*\(/)) {
+    pushUnique(capabilities, "readsDatabase");
+  }
+
+  // ── Rust capabilities ──────────────────────────────────────────
+  if (text.match(/\b(Json|web::Json|axum::Json)\s*\(/) || text.includes("Payload")) {
+    pushUnique(capabilities, "consumesRequestBody");
+  }
+
+  // ── Java capabilities ──────────────────────────────────────────
+  if (text.includes("@RequestBody")) {
+    pushUnique(capabilities, "consumesRequestBody");
+  }
+  if (text.includes("@Repository") || text.includes("CrudRepository") || text.includes("JpaRepository") || text.includes("EntityManager")) {
+    pushUnique(capabilities, "readsDatabase");
+  }
 }
 
 function detectControlsFromText(text: string, controls: string[]) {
@@ -128,7 +152,7 @@ function detectControlsFromText(text: string, controls: string[]) {
     pushUnique(controls, "idempotency");
   }
 
-  // Input validation — JS/TS + Python
+  // Input validation — JS/TS + Python + Go + Rust + Java
   if (
     text.match(/\bimport\b.*\bfrom\b.*['"]zod['"]/) ||
     text.match(/\bimport\b.*\bfrom\b.*['"]yup['"]/) ||
@@ -136,19 +160,28 @@ function detectControlsFromText(text: string, controls: string[]) {
     text.match(/\brequire\s*\(\s*['"]zod['"]\s*\)/) ||
     text.match(/\brequire\s*\(\s*['"]yup['"]\s*\)/) ||
     text.match(/\brequire\s*\(\s*['"]joi['"]\s*\)/) ||
-    text.includes("BaseModel") || // Pydantic
-    text.includes("Schema(") || // Marshmallow
-    text.includes("dataclass") ||
-    text.match(/\.parse\s*\(/) ||
-    text.match(/\.safeParse\s*\(/) ||
-    text.match(/\.validate\s*\(/) ||
-    text.match(/\.model_validate\s*\(/)
+    text.includes("BaseModel") || text.includes("Schema(") || text.includes("dataclass") ||
+    text.match(/\.parse\s*\(/) || text.match(/\.safeParse\s*\(/) || text.match(/\.validate\s*\(/) || text.match(/\.model_validate\s*\(/) ||
+    text.includes("validator.New") || text.includes("go-playground/validator") || // Go
+    text.includes("Validate()") || text.includes(".Struct(") || // Go
+    text.includes("serde::Deserialize") || text.includes("#[validate(") || // Rust
+    text.includes("Validated<") || // Rust
+    text.includes("@Valid") || text.includes("@NotNull") || text.includes("@NotBlank") || // Java
+    text.includes("@Size") || text.includes("@Pattern") // Java
   ) {
     pushUnique(controls, "inputValidation");
   }
 
-  // Error handling — JS + Python
-  if (text.match(/\.catch\s*\(/) || text.match(/\bexcept\b/) || text.match(/\btry:\s*$/m)) {
+  // Error handling — JS + Python + Go + Rust + Java
+  if (
+    text.match(/\.catch\s*\(/) ||
+    text.match(/\bexcept\b/) || text.match(/\btry:\s*$/m) ||
+    text.match(/\bif\s+err\s*!=\s*nil/) || // Go
+    text.match(/\brecover\s*\(\s*\)/) || // Go
+    text.includes("Result<") || // Rust
+    text.match(/\bcatch\s*\(\s*\w+/) || // Java/C#/TS
+    text.includes("@ExceptionHandler") // Java
+  ) {
     pushUnique(controls, "errorHandling");
   }
 
@@ -196,6 +229,92 @@ function detectControlsFromText(text: string, controls: string[]) {
     text.match(/auditLog\s*\([^)]*\{/)
   ) {
     pushUnique(controls, "logSanitization");
+  }
+
+  // ── Go/Rust/Java auth ──────────────────────────────────────────
+  // Go: middleware, JWT, session
+  if (
+    text.includes("middleware.Auth") || text.includes("JWT") ||
+    text.includes("session.Get(") || text.includes("c.Set(") ||
+    text.match(/gin\.BasicAuth/) || text.match(/middleware\.BasicAuth/)
+  ) {
+    pushUnique(controls, "auth");
+  }
+  // Rust: extractors, guards
+  if (
+    text.includes("Authorization") || text.includes("Bearer") ||
+    text.includes("Session") || text.includes("Identity")
+  ) {
+    pushUnique(controls, "auth");
+  }
+  // Java: Spring Security
+  if (
+    text.includes("@PreAuthorize") || text.includes("@Secured") ||
+    text.includes("SecurityContext") || text.includes("AuthenticationPrincipal") ||
+    text.includes("@AuthenticationPrincipal")
+  ) {
+    pushUnique(controls, "auth");
+  }
+
+  // ── SQL injection risk ─────────────────────────────────────────
+  if (
+    text.match(/\.query\s*\(\s*["'`].*\$\{/) ||      // JS template literal SQL
+    text.match(/\.query\s*\(\s*["'`].*\+/) ||         // JS string concat SQL
+    text.match(/\.raw\s*\(\s*["'`].*\$\{/) ||
+    text.match(/\.raw\s*\(\s*["'`].*\+/) ||
+    text.match(/execute\s*\(\s*["'`].*%s/) ||          // Python % format SQL
+    text.match(/execute\s*\(\s*f["']/) ||              // Python f-string SQL
+    text.match(/\.query\s*\(\s*fmt\.Sprintf/) ||       // Go fmt.Sprintf SQL
+    text.match(/\.exec\s*\(\s*fmt\.Sprintf/) ||
+    text.match(/\.Query\s*\(\s*fmt\.Sprintf/) ||
+    text.match(/createQuery\s*\(\s*["'`].*\+/) ||      // Java string concat SQL
+    text.match(/createNativeQuery\s*\(\s*["'`].*\+/) ||
+    text.match(/sqlx?\.\w+\s*\(\s*["'`].*\$/)         // Rust format SQL
+  ) {
+    pushUnique(controls, "sqlInjectionRisk");
+  }
+
+  // ── Path traversal risk ────────────────────────────────────────
+  if (
+    text.match(/readFile\s*\(\s*(req|request|params|query|body)\./) ||
+    text.match(/readFile\s*\(\s*path\.join\s*\(\s*.*?(req|request|params|query)/) ||
+    text.match(/open\s*\(\s*(req|request|params|body)\./) ||
+    text.match(/os\.open\s*\(\s*(request|req)\./) ||
+    text.match(/sendFile\s*\(\s*(req|request|params|query)\./)
+  ) {
+    pushUnique(controls, "pathTraversalRisk");
+  }
+
+  // ── CSP / security headers ─────────────────────────────────────
+  if (
+    text.includes("Content-Security-Policy") ||
+    text.includes("helmet(") ||
+    text.includes("helmet.csp") ||
+    text.includes("X-Frame-Options") ||
+    text.includes("X-Content-Type-Options")
+  ) {
+    pushUnique(controls, "securityHeaders");
+  }
+
+  // ── HTTPS / HSTS ───────────────────────────────────────────────
+  if (
+    text.includes("Strict-Transport-Security") ||
+    text.includes("HTTPS") || text.includes("https") ||
+    text.includes("redirectHttps") || text.includes("forceSSL") ||
+    text.match(/301.*https/) || text.match(/302.*https/)
+  ) {
+    pushUnique(controls, "httpsEnforcement");
+  }
+
+  // ── Insecure deserialization / code injection ──────────────────
+  if (
+    text.match(/pickle\.loads?\s*\(/) ||
+    text.match(/yaml\.load\s*\(\s*[^,)]+\s*\)/) ||
+    text.match(/\beval\s*\(\s*(req|request|input|body|params|query)/) ||
+    text.match(/\bnew\s+Function\s*\(\s*(req|request|input|body)/) ||
+    text.match(/compile\s*\(\s*(req|request|input|body)/)
+  ) {
+    pushUnique(controls, "insecureDeserialization");
   }
 }
 
@@ -292,6 +411,45 @@ export async function inspectRouteSource(
       pushUnique(controls, "debugStatements");
     }
     if (text.match(/\bexcept\s+/) || text.match(/\btry:\s*$/m)) {
+      pushUnique(controls, "errorHandling");
+    }
+  }
+
+  // Go-specific detections
+  if (ext === ".go") {
+    if (text.match(/\blog\.\w+\s*\(/) || text.match(/\blogrus\.\w+\s*\(/) || text.match(/\bzap\.\w+\s*\(/)) {
+      pushUnique(controls, "logging");
+    }
+    if (text.match(/\bfmt\.Print(ln|f)?\s*\(/) || text.match(/\blog\.Println\s*\(/)) {
+      pushUnique(controls, "debugStatements");
+    }
+    if (text.match(/\bif\s+err\s*!=\s*nil/)) {
+      pushUnique(controls, "errorHandling");
+    }
+  }
+
+  // Rust-specific detections
+  if (ext === ".rs") {
+    if (text.match(/\b(log|tracing)::\w+!/) || text.match(/\bprintln!\s*\(/) || text.match(/\binfo!\s*\(/) || text.match(/\bwarn!\s*\(/)) {
+      pushUnique(controls, "logging");
+    }
+    if (text.match(/\bprintln!\s*\(/) || text.match(/\bdbg!\s*\(/) || text.match(/\beprintln!\s*\(/)) {
+      pushUnique(controls, "debugStatements");
+    }
+    if (text.includes("Result<") || text.match(/\?;\s*$/m)) {
+      pushUnique(controls, "errorHandling");
+    }
+  }
+
+  // Java-specific detections
+  if (ext === ".java") {
+    if (text.match(/\blogger?\.(debug|info|warn|error)\s*\(/) || text.match(/\bLOGGER?\.(debug|info|warn|error)\s*\(/)) {
+      pushUnique(controls, "logging");
+    }
+    if (text.match(/\bSystem\.out\.print(ln)?\s*\(/) || text.match(/\bSystem\.err\.print(ln)?\s*\(/)) {
+      pushUnique(controls, "debugStatements");
+    }
+    if (text.match(/\bcatch\s*\(\s*\w+/)) {
       pushUnique(controls, "errorHandling");
     }
   }

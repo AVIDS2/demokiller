@@ -1,11 +1,17 @@
 {
   "name": "demokiller",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": false,
   "type": "module",
   "bin": {
     "demokiller": "dist/src/cli.js",
     "demokiller-mcp": "dist/src/mcp.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/plugin.js",
+      "types": "./dist/src/plugin.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

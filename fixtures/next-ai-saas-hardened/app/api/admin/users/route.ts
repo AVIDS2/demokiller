@@ -10,8 +10,19 @@ function auditLog(action: string, data: Record<string, unknown>) {
   // structured audit logger — not console.log
 }
 
+const securityHeaders = {
+  "Content-Security-Policy": "default-src 'self'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+};
+
 export async function DELETE(request: Request) {
   try {
+    if (process.env.NODE_ENV === "production" && request.headers.get("x-forwarded-proto") !== "https") {
+      return Response.redirect(`https://${request.headers.get("host")}${request.url}`, 301);
+    }
+
     const session = await auth();
     if (!session?.user?.role || session.user.role !== "admin") {
       return new Response("Forbidden", { status: 403 });
