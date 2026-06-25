@@ -8,7 +8,7 @@ export type StackType =
   | "actix" | "axum"
   | "spring-boot"
   | "laravel" | "rails" | "sinatra"
-  | "aspnet" | "vapor" | "rocket"
+  | "aspnet" | "vapor" | "rocket" | "shelf"
   | "echo-kt" | "ktor"
   | "http4s" | "akka"
   | "unknown";
@@ -309,6 +309,33 @@ function detectCsStack(d: DepMap): StackType {
   return "unknown";
 }
 
+async function readKotlinDeps(root: string): Promise<DepMap> {
+  const deps: DepMap = {};
+  try {
+    const text = await fs.readFile(path.join(root, "build.gradle.kts"), "utf8");
+    if (text.includes("spring-boot")) deps["spring-boot"] = "latest";
+    if (text.includes("ktor")) deps["ktor"] = "latest";
+  } catch {}
+  try {
+    const text = await fs.readFile(path.join(root, "build.gradle"), "utf8");
+    if (text.includes("spring-boot")) deps["spring-boot"] = "latest";
+  } catch {}
+  return deps;
+}
+
+async function readDartDeps(root: string): Promise<DepMap> {
+  const deps: DepMap = {};
+  try {
+    const text = await fs.readFile(path.join(root, "pubspec.yaml"), "utf8");
+    if (text.includes("shelf")) deps["shelf"] = "latest";
+  } catch {}
+  return deps;
+}
+function detectDartStack(d: DepMap): StackType {
+  if (d["shelf"]) return "shelf";
+  return "unknown";
+}
+
 // ─── Main inventory builder ──────────────────────────────────────
 
 type DetectorResult = { stack: StackType; lang: string; deps: DepMap };
@@ -367,13 +394,30 @@ async function tryDetect(root: string): Promise<DetectorResult> {
   stack = detectCsStack(deps);
   if (stack !== "unknown") return { stack, lang: "cs", deps };
 
+  // Kotlin
+  deps = await readKotlinDeps(root);
+  stack = detectKotlinStack(deps);
+  if (stack !== "unknown") return { stack, lang: "kotlin", deps };
+
+  // Dart
+  deps = await readDartDeps(root);
+  stack = detectDartStack(deps);
+  if (stack !== "unknown") return { stack, lang: "dart", deps };
+
   return { stack: "unknown", lang: "unknown", deps: {} };
 }
 
 export async function buildInventory(root: string): Promise<ProjectInventory> {
   const files = await walk(root);
   const hasDockerfile = files.some((f) => f === "Dockerfile" || f.endsWith("/Dockerfile"));
-  const detected = await tryDetect(root);
+  let detected = await tryDetect(root);
+
+  // C++ fallback: check file extensions
+  if (detected.lang === "unknown") {
+    const hasCppFiles = files.some(f => f.endsWith(".cpp") || f.endsWith(".hpp") || f.endsWith(".h") || f.endsWith(".cc"));
+    if (hasCppFiles) detected = { stack: "unknown", lang: "cpp", deps: {} };
+  }
+
   let apiRoutes: string[] = [];
 
   if (detected.lang === "js") {

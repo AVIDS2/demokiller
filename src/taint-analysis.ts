@@ -172,6 +172,13 @@ function findDirectTaintPaths(graph: CallGraph): TaintPath[] {
       if (seen.has(key)) continue;
       seen.add(key);
 
+      // Check for sanitizers between source and sink
+      const interveningCalls = funcCalls.filter(c => c.line > otherCall.line && c.line < call.line);
+      const hasSanitizer = interveningCalls.some(c =>
+        TAINT_SANITIZERS.some(s => c.callee.includes(s.pattern))
+      );
+      if (hasSanitizer) continue; // Taint path is broken
+
       // Check if source call happens before sink call (line number heuristic)
       if (otherCall.line <= call.line) {
         // Check if a sanitizer intervenes between source and sink
