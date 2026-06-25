@@ -13,16 +13,24 @@ export function taintPathFindings(taintPaths: TaintPath[]): Finding[] {
     if (seen.has(key)) continue;
     seen.add(key);
 
+    // Downgrade severity if sanitizer detected between source and sink
+    const severity = tp.sanitized ? "medium" : (tp.sink.severity as "blocker" | "high" | "medium");
+    const confidence = tp.sanitized ? "low" : "high";
+
     findings.push({
       ruleId: "DK-TAINT-001",
-      title: `User input flows to ${tp.sink.kind} operation without sanitization`,
-      severity: tp.sink.severity as "blocker" | "high" | "medium",
-      confidence: "high",
+      title: tp.sanitized
+        ? `User input flows to ${tp.sink.kind} operation (sanitizer detected — verify effectiveness)`
+        : `User input flows to ${tp.sink.kind} operation without sanitization`,
+      severity,
+      confidence,
       entryPoint: tp.source.file,
       capability: `Taint path: ${tp.risk}`,
       asset: "system integrity",
       missingControls: ["taintSanitization"],
-      consequence: `User-controlled data reaches ${tp.sink.kind} through the call chain. This enables injection attacks that pattern matching alone cannot detect.`,
+      consequence: tp.sanitized
+        ? `User-controlled data reaches ${tp.sink.kind} through the call chain. A sanitizer was detected between source and sink — verify it actually prevents the attack.`
+        : `User-controlled data reaches ${tp.sink.kind} through the call chain. This enables injection attacks that pattern matching alone cannot detect.`,
       acceptanceCriteria: [
         "User input is validated before reaching dangerous operations.",
         "Dangerous operations use parameterized/safe APIs.",
@@ -35,7 +43,7 @@ export function taintPathFindings(taintPaths: TaintPath[]): Finding[] {
         entryPoint: tp.source.file,
         capability: tp.risk,
         asset: "system integrity",
-        controls: [],
+        controls: tp.sanitized ? ["sanitizer-detected"] : [],
         signals: tp.path,
       }],
     });

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.1
+
+### Taint Analysis Improvements
+
+- **Sanitizer detection**: Taint paths now check for sanitizers (parseInt, escapeHtml, .parse(), etc.) between source and sink. If a sanitizer is detected, severity is downgraded to medium with "sanitizer detected — verify effectiveness" note.
+- **Variable assignment tracking**: Taint analysis tracks `const x = req.body.x` patterns through variable assignments.
+- **PII exposure detection** (DK-DATA-002): Detects routes returning database results with PII fields (email, phone, address) without filtering.
+- **N+1 query detection** (DK-PERF-001): Detects database calls inside loops (for/while/map/forEach).
+
+### Production Readiness Checks
+
+- **Graceful shutdown** (DK-OPS-001): Checks for SIGTERM/SIGINT handling in server projects.
+- **Health check endpoint** (DK-OPS-002): Checks for /health or /healthz endpoint.
+- Both rules only fire for server stacks with actual API routes.
+
+### Total: 38 rules (14 security + 5 agent + 19 quality/ops)
+
 ## 0.5.0
 
 ### Architecture: Call Graph + Taint Analysis

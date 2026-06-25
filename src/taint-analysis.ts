@@ -60,6 +60,75 @@ export const TAINT_SINKS: TaintSink[] = [
   { pattern: "render json", kind: "response", severity: "medium", description: "Data sent to client" },
 ];
 
+// ─── Sanitizers (break taint paths) ─────────────────────────────
+
+export const TAINT_SANITIZERS = [
+  // Type conversion (removes string taint)
+  { pattern: "parseInt", kind: "type-conversion" },
+  { pattern: "parseFloat", kind: "type-conversion" },
+  { pattern: "Number(", kind: "type-conversion" },
+  { pattern: "parseInt(", kind: "type-conversion" },
+  // HTML/URL encoding
+  { pattern: "escapeHtml", kind: "encoding" },
+  { pattern: "encodeURIComponent", kind: "encoding" },
+  { pattern: "encodeURI", kind: "encoding" },
+  { pattern: "htmlEscape", kind: "encoding" },
+  { pattern: "sanitize", kind: "sanitization" },
+  { pattern: "escape(", kind: "encoding" },
+  // Validation (if used before sink, indicates awareness)
+  { pattern: ".parse(", kind: "validation" },
+  { pattern: ".safeParse(", kind: "validation" },
+  { pattern: "z.string()", kind: "validation" },
+  { pattern: "z.number()", kind: "validation" },
+  { pattern: "validator.", kind: "validation" },
+  // SQL parameterization
+  { pattern: "prepare(", kind: "parameterization" },
+  { pattern: "bindParam", kind: "parameterization" },
+  { pattern: "$1", kind: "parameterization" },
+  { pattern: "?", kind: "parameterization" },
+];
+
+export function isSanitized(text: string, line: number, calls: CallSite[]): boolean {
+  // Check if any sanitizer is called on the same line or nearby
+  const nearbyCalls = calls.filter(c => Math.abs(c.line - line) <= 2);
+  return nearbyCalls.some(c =>
+    TAINT_SANITIZERS.some(s => c.callee.includes(s.pattern))
+  );
+}
+
+// ─── Variable assignment tracking ───────────────────────────────
+
+interface VarAssignment {
+  name: string;
+  source: string;  // what was assigned (could be a tainted expression)
+  file: string;
+  line: number;
+}
+
+function extractAssignments(text: string, file: string): VarAssignment[] {
+  const assignments: VarAssignment[] = [];
+  // const/let/var x = expr
+  const pattern = /(?:const|let|var)\s+(\w+)\s*=\s*(.+)/g;
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    const line = text.substring(0, match.index).split("\n").length;
+    assignments.push({ name: match[1], source: match[2].trim(), file, line });
+  }
+  return assignments;
+}
+
+function isTaintedExpression(expr: string, assignments: VarAssignment[]): boolean {
+  // Direct source
+  if (TAINT_SOURCES.some(s => expr.includes(s.pattern))) return true;
+  // Variable that was assigned from a tainted source
+  const varName = expr.split(/[.\s(]/)[0];
+  const assignment = assignments.find(a => a.name === varName);
+  if (assignment && TAINT_SOURCES.some(s => assignment.source.includes(s.pattern))) return true;
+  // String concatenation with tainted variable
+  if (expr.includes("+") && assignments.some(a => expr.includes(a.name) && TAINT_SOURCES.some(s => a.source.includes(s.pattern)))) return true;
+  return false;
+}
+
 // ─── Taint finding ──────────────────────────────────────────────
 
 export interface TaintPath {
@@ -67,6 +136,7 @@ export interface TaintPath {
   sink: { pattern: string; kind: string; severity: string; file: string; line: number };
   path: string[];
   risk: string;
+  sanitized: boolean;
 }
 
 // ─── Analysis ───────────────────────────────────────────────────
@@ -104,11 +174,18 @@ function findDirectTaintPaths(graph: CallGraph): TaintPath[] {
 
       // Check if source call happens before sink call (line number heuristic)
       if (otherCall.line <= call.line) {
+        // Check if a sanitizer intervenes between source and sink
+        const sanitized = funcCalls.some(c =>
+          c.line > otherCall.line && c.line < call.line &&
+          TAINT_SANITIZERS.some(s => c.callee.includes(s.pattern))
+        );
+
         results.push({
           source: { pattern: source.pattern, kind: source.kind, file: otherCall.file, line: otherCall.line },
           sink: { pattern: sink.pattern, kind: sink.kind, severity: sink.severity, file: call.file, line: call.line },
           path: [`${otherCall.file}:${otherCall.line}`, `${call.file}:${call.line}`],
           risk: `${source.description} → ${sink.description}`,
+          sanitized,
         });
       }
     }
@@ -136,11 +213,9 @@ function findCrossFunctionTaint(graph: CallGraph, maxDepth = 3): TaintPath[] {
     if (!source) continue;
 
     const sourceFunc = call.caller;
-    // Check if this function directly calls a function that has a sink
     const callees = graph.calls.filter(c => c.caller === sourceFunc && c.file === call.file);
 
     for (const calleeCall of callees) {
-      // Resolve to actual function
       const resolved = resolveCallee(graph, calleeCall);
       if (!resolved) continue;
 
@@ -151,11 +226,19 @@ function findCrossFunctionTaint(graph: CallGraph, maxDepth = 3): TaintPath[] {
         if (seen.has(key)) continue;
         seen.add(key);
 
+        // Check if a sanitizer exists in the calling function between source and the call
+        const funcCalls = graph.calls.filter(c => c.caller === sourceFunc && c.file === call.file);
+        const sanitized = funcCalls.some(c =>
+          c.line > call.line && c.line <= calleeCall.line &&
+          TAINT_SANITIZERS.some(s => c.callee.includes(s.pattern))
+        );
+
         results.push({
           source: { pattern: source.pattern, kind: source.kind, file: call.file, line: call.line },
           sink: { pattern: sink.pattern, kind: sink.kind, severity: sink.severity, file: sinkCall.file, line: sinkCall.line },
           path: [`${call.file}:${call.line}`, resolvedKey, `${sinkCall.file}:${sinkCall.line}`],
           risk: `${source.description} flows through ${resolved.name} → ${sink.description}`,
+          sanitized,
         });
       }
     }

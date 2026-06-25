@@ -28,9 +28,13 @@ import { webhookSafetyRule } from "./webhook-safety.js";
 // Quality rules
 import { debugLeakRule } from "./debug-leak.js";
 import { errorLeakRule } from "./error-leak.js";
+import { gracefulShutdownRule } from "./graceful-shutdown.js";
+import { healthCheckRule } from "./health-check.js";
 import { inputValidationRule } from "./input-validation.js";
 import { logInjectionRule } from "./log-injection.js";
+import { nPlusOneRule } from "./n-plus-one.js";
 import { observabilityRule } from "./observability.js";
+import { piiExposureRule } from "./pii-exposure.js";
 // Project rules
 import { depsVulnerabilityFindings } from "./deps-vulnerability.js";
 import { dockerSecurityFindings } from "./docker-security.js";
@@ -87,6 +91,8 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...routeEvidence.flatMap(sensitiveDataRule),
     ...routeEvidence.flatMap(cspMissingRule),
     ...routeEvidence.flatMap(httpsEnforcementRule),
+    ...routeEvidence.flatMap(nPlusOneRule),
+    ...routeEvidence.flatMap(piiExposureRule),
     // Agent rules
     ...routeEvidence.flatMap(agentCodeExecRule),
     ...routeEvidence.flatMap(mcpServerAuthRule),
@@ -105,6 +111,8 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...tsStrictRule(inventory),
     ...missingDocsRule(inventory),
     ...npmPublishRule(inventory),
+    ...gracefulShutdownRule(inventory),
+    ...healthCheckRule(inventory),
   ];
 
   return { findings, inventory };

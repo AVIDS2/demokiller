@@ -121,6 +121,26 @@ function detectCapabilitiesFromText(text: string, capabilities: string[]) {
     pushUnique(capabilities, "commandExecution");
   }
 
+  // N+1 query detection: DB call inside a loop
+  if (
+    text.match(/for\s*\(.*\)\s*\{[\s\S]{0,500}(prisma|db|session|collection)\.\w+\.(find|query|get|select|where)\s*\(/) ||
+    text.match(/\.map\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
+    text.match(/\.forEach\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
+    text.match(/for\s+\w+\s+in\s+[\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
+    text.match(/while\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/)
+  ) {
+    pushUnique(capabilities, "nPlusOneQuery");
+  }
+
+  // PII field exposure: DB result with PII fields returned directly
+  if (
+    (text.includes("email") || text.includes("phone") || text.includes("address") || text.includes("ssn") || text.includes("password")) &&
+    (text.includes("prisma.") || text.includes("db.") || text.includes("User.") || text.includes("user.")) &&
+    (text.match(/return.*(?:user|User|profile|Profile)/) || text.match(/res\.json\s*\(\s*(?:user|users|data)/) || text.match(/Response\.json\s*\(\s*(?:user|users)/))
+  ) {
+    pushUnique(capabilities, "piiExposure");
+  }
+
   // ── Agent ecosystem ──────────────────────────────────────────────
   // LLM output → code execution
   if (
