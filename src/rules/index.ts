@@ -41,6 +41,8 @@ import { piiExposureRule } from "./pii-exposure.js";
 import { depsVulnerabilityFindings } from "./deps-vulnerability.js";
 import { dockerSecurityFindings } from "./docker-security.js";
 import { envContractRule } from "./env-contract.js";
+import { gracefulShutdownRule } from "./graceful-shutdown.js";
+import { healthCheckRule } from "./health-check.js";
 import { migrationPostureRule } from "./migration-posture.js";
 import { missingDocsRule } from "./missing-docs.js";
 import { missingTestsRule } from "./missing-tests.js";

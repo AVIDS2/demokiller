@@ -277,6 +277,25 @@ function detectControlsFromText(text: string, controls: string[]) {
   ) {
     pushUnique(controls, "connectionPooling");
   }
+
+  // N+1 query detection — DB call inside for/while/forEach/map
+  if (
+    text.match(/\b(for\s*\(|while\s*\(|\.forEach\s*\(|\.map\s*\(|for\s+\w+\s+in)/) &&
+    text.match(/prisma\.\w+\.(find|delete|update|create|upsert)/i) ||
+    (text.match(/\b(for\s*\(|while\s*\(|\.forEach\s*\(|\.map\s*\(|for\s+\w+\s+in)/) && text.match(/\.(query|execute|raw)\s*\(/))
+  ) {
+    pushUnique(capabilities, "nPlusOneRisk");
+  }
+
+  // PII exposure detection — return statement with PII-like fields
+  if (
+    text.match(/return.*\b(email|phone|ssn|social_security|credit_card|passport|address|dob|date_of_birth)\b/) ||
+    text.match(/\.json\s*\(\s*\{\s*[^}]*\b(email|password|secret|token|ssn)\b/) ||
+    text.match(/res\.send\s*\([^)]*\b(email|password|secret|token|ssn)\b/) ||
+    text.match(/c\.JSON\s*\([^)]*\b(email|password|secret)\b/)
+  ) {
+    pushUnique(controls, "piiExposure");
+  }
 }
 
 function extractEnvVars(text: string): string[] {
