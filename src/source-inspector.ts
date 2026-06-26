@@ -7,6 +7,7 @@ export interface RouteSourceEvidence {
   controls: string[];
   envVars: string[];
   line: number;
+  projectKind?: string;
   metrics?: {
     complexity: number;
     functionCount: number;
@@ -77,6 +78,56 @@ function pushUnique(target: string[], value: string) {
   if (!target.includes(value)) target.push(value);
 }
 
+// Split source text into function body segments for scoped analysis.
+// Uses regex heuristics for function boundaries (JS/TS, Python, Go, Rust, Java, etc.)
+function splitByFunctionBoundary(text: string): string[] {
+  const lines = text.split("\n");
+  const bodies: string[] = [];
+  let current: string[] = [];
+  let depth = 0;
+  let inFunc = false;
+  for (const line of lines) {
+    if (!inFunc) {
+      // Detect function/def/func/fn keywords at line start or after whitespace
+      if (line.match(/^\s*(export\s+)?(async\s+)?function\s+\w/) ||
+          line.match(/^\s*(const|let|var)\s+\w+\s*=\s*(async\s+)?\(/) ||
+          line.match(/^\s*(const|let|var)\s+\w+\s*=\s*(async\s+)?function/) ||
+          line.match(/^\s*def\s+\w+/) ||
+          line.match(/^\s*func\s+/) ||
+          line.match(/^\s*fn\s+/) ||
+          line.match(/^\s*(public|private|protected|static|async)\s+.*\w+\s*\(/) ||
+          line.match(/^\s*class\s+\w+/)) {
+        inFunc = true;
+        current = [line];
+        depth = (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+        if (line.match(/\bdef\s/) || line.match(/\bfunc\s/) || line.match(/\bfn\s/)) {
+          // Python/Go/Rust: indentation-based or has `{`
+          depth = line.includes("{") ? depth : 0;
+        }
+        if (depth <= 0 && current.length > 0) {
+          // Single-line function or no braces
+          bodies.push(current.join("\n"));
+          inFunc = false;
+          current = [];
+        }
+        continue;
+      }
+    }
+    if (inFunc) {
+      current.push(line);
+      depth += (line.match(/\{/g) || []).length - (line.match(/\}/g) || []).length;
+      if (depth <= 0) {
+        bodies.push(current.join("\n"));
+        inFunc = false;
+        current = [];
+      }
+    }
+  }
+  // If we never found function boundaries, return the whole text as one segment
+  if (bodies.length === 0) return [text];
+  return bodies;
+}
+
 function detectCapabilitiesFromText(text: string, capabilities: string[]) {
   if (text.includes("openai") || text.includes("OpenAI") || text.includes("chat.completions") || text.includes("openai-go") || text.includes("openai-java") || text.includes("openai-python")) {
     pushUnique(capabilities, "callsOpenAI");
@@ -120,22 +171,31 @@ function detectCapabilitiesFromText(text: string, capabilities: string[]) {
   if (text.match(/\b(exec|execSync|spawn|child_process)\s*\(/) || text.match(/\bsubprocess\.(run|Popen|call)\s*\(/) || text.match(/\bos\.system\s*\(/)) {
     pushUnique(capabilities, "commandExecution");
   }
-  // N+1 query: database call inside a loop
-  if (
-    text.match(/\b(for\s*\(|while\s*\(|\.forEach\s*\(|\.map\s*\(|for\s+\w+\s+in)/) &&
-    (text.match(/prisma\.\w+\.(find|delete|update|create|upsert)/i) || text.match(/\.(query|execute|raw)\s*\(/))
-  ) {
-    pushUnique(capabilities, "nPlusOneRisk");
-  }
+  // N+1 query detection: DB call inside a loop (function-scoped to reduce false positives)
+  const hasLoopPattern = /\b(for\s*\(|while\s*\(|\.forEach\s*\(|\.map\s*\(|for\s+\w+\s+in)/;
+  const hasDbCall = /prisma\.\w+\.(find|delete|update|create|upsert)/i;
+  const hasDbQuery = /\.(query|execute|raw)\s*\(/;
+  const hasDbCallInLoop = /for\s*\(.*\)\s*\{[\s\S]{0,500}(prisma|db|session|collection)\.\w+\.(find|query|get|select|where)\s*\(/;
+  const hasMapWithDb = /\.map\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/;
+  const hasForEachWithDb = /\.forEach\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/;
+  const hasForInWithDb = /for\s+\w+\s+in\s+[\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/;
+  const hasWhileWithDb = /while\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/;
 
-  // N+1 query detection: DB call inside a loop
-  if (
-    text.match(/for\s*\(.*\)\s*\{[\s\S]{0,500}(prisma|db|session|collection)\.\w+\.(find|query|get|select|where)\s*\(/) ||
-    text.match(/\.map\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
-    text.match(/\.forEach\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
-    text.match(/for\s+\w+\s+in\s+[\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/) ||
-    text.match(/while\s*\([\s\S]{0,300}(prisma|db|session)\.\w+\.(find|query|get)\s*\(/)
-  ) {
+  // Split into function bodies for scoped detection
+  const funcBodies = splitByFunctionBoundary(text);
+  let nPlusOneInFunc = false;
+  for (const body of funcBodies) {
+    if (
+      (hasLoopPattern.test(body) && (hasDbCall.test(body) || hasDbQuery.test(body))) ||
+      hasDbCallInLoop.test(body) || hasMapWithDb.test(body) ||
+      hasForEachWithDb.test(body) || hasForInWithDb.test(body) || hasWhileWithDb.test(body)
+    ) {
+      nPlusOneInFunc = true;
+      break;
+    }
+  }
+  if (nPlusOneInFunc) {
+    pushUnique(capabilities, "nPlusOneRisk");
     pushUnique(capabilities, "nPlusOneQuery");
   }
 

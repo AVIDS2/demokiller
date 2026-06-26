@@ -1,7 +1,10 @@
 import type { Finding } from "../types.js";
 import type { RouteSourceEvidence } from "../source-inspector.js";
 
+const WEB_FACING = new Set(["web-app", "api-gateway", "static-site", "cms", "browser-extension"]);
+
 export function corsWildcardRule(route: RouteSourceEvidence): Finding[] {
+  if (!WEB_FACING.has(route.projectKind || "unknown")) return [];
   if (!route.controls.includes("corsWildcard")) return [];
 
   return [

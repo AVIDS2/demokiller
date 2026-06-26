@@ -25,6 +25,8 @@ export function detectProjectKind(deps: Record<string, string>, files: string[])
   if (depNames.some(d => d === "tensorflow" || d === "torch" || d === "pandas" || d === "apache-airflow" || d === "pyspark")) return "ml-pipeline";
   // IaC (check before testing frameworks which may pull in cdk)
   if (depNames.some(d => d.includes("cdktf") || d.includes("pulumi") || d.includes("terraform"))) return "iac";
+  // File-based IaC detection (pure .tf files without npm packages)
+  if (fileStr.includes(".tf") || fileStr.includes(".tfvars") || fileStr.includes("cloudformation") || fileStr.includes("pulumi")) return "iac";
   // Message queues
   if (depNames.some(d => d === "kafkajs" || d === "amqplib" || d === "bullmq" || d === "bull")) return "mq-worker";
   // Cron
@@ -36,7 +38,9 @@ export function detectProjectKind(deps: Record<string, string>, files: string[])
   // Auth
   if (depNames.some(d => d === "passport" || d === "@auth/core" || d === "next-auth" || d === "keycloak-js" || d === "@clerk/nextjs")) return "auth-service";
   // Serverless
-  if (depNames.some(d => d.includes("serverless") || d === "@aws-lambda")) return "serverless-func";
+  if (depNames.some(d => d.includes("serverless") || d === "@aws-lambda" || d.startsWith("@aws-sdk"))) return "serverless-func";
+  // File-based serverless detection
+  if (fileStr.includes("serverless.yml") || fileStr.includes("template.yaml") || fileStr.includes("samconfig.toml")) return "serverless-func";
   // Static site generators
   if (depNames.some(d => d === "astro" || d === "gatsby" || d === "hugo" || d === "next" && depNames.some(x => x === "sharp" || x === "rehype"))) return "static-site";
   // Browser extensions

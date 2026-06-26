@@ -9,7 +9,7 @@ export function commandInjectionRule(route: RouteSourceEvidence): Finding[] {
       ruleId: "DK-CMDI-001",
       title: "Route executes system commands and may be vulnerable to command injection",
       severity: "blocker",
-      confidence: "medium",
+      confidence: "low",
       entryPoint: route.path,
       capability: "Executes OS-level commands from route handler",
       asset: "host system integrity",

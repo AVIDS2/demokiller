@@ -51,6 +51,9 @@ import { mqWorkerFindings } from "./mq-worker.js";
 import { npmPublishRule } from "./npm-publish.js";
 import { iacFindings } from "./iac.js";
 import { paymentSystemFindings, authServiceFindings } from "./payment-auth.js";
+import { cronJobFindings } from "./cron-job.js";
+import { serverlessFuncFindings } from "./serverless-func.js";
+import { desktopAppFindings } from "./desktop-app.js";
 import { tsStrictRule } from "./ts-strict.js";
 import { projectTypeFindings } from "./universal-project.js";
 
@@ -69,7 +72,10 @@ export interface AnalysisResult {
 
 export async function analyzeFindings(root: string): Promise<AnalysisResult> {
   const inventory = await buildInventory(root);
-  const routeEvidence = await Promise.all(inventory.apiRoutes.map((r) => inspectRouteSource(root, r)));
+  const rawEvidence = await Promise.all(inventory.apiRoutes.map((r) => inspectRouteSource(root, r)));
+  // Thread projectKind to route-based rules for type-scoped filtering
+  const projectKind = inventory.projectKind || "unknown";
+  const routeEvidence = rawEvidence.map(e => ({ ...e, projectKind }));
   const usedEnvVars = Array.from(new Set(routeEvidence.flatMap((r) => r.envVars)));
   const declaredEnvVars = await readDeclaredEnvVars(root, inventory.envExamplePath);
 
@@ -132,6 +138,9 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...(await iacFindings(root, inventory)),
     ...(await paymentSystemFindings(root, inventory)),
     ...(await authServiceFindings(root, inventory)),
+    ...(await cronJobFindings(root, inventory)),
+    ...(await serverlessFuncFindings(root, inventory)),
+    ...(await desktopAppFindings(root, inventory)),
     ...projectTypeFindings(inventory),
     ...(await gracefulShutdownRule(inventory)),
     ...(await healthCheckRule(inventory)),

@@ -113,4 +113,57 @@ describe("analyzeFindings", () => {
     expect(inventory.stack).toBe("aspnet");
     expect(findings.length).toBeGreaterThan(0);
   });
+
+  it("CLI tool fixture gets CLI deep rules, no web-specific rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/cli-tool-risky");
+    expect(inventory.projectKind).toBe("cli-tool");
+    const ruleIds = findings.map(f => f.ruleId);
+    // CLI deep rules should fire
+    expect(ruleIds.some(id => id.startsWith("DK-CLI-"))).toBe(true);
+    // Web-specific rules should NOT fire
+    expect(ruleIds).not.toContain("DK-CSP-001");
+    expect(ruleIds).not.toContain("DK-HTTPS-001");
+    expect(ruleIds).not.toContain("DK-CORS-001");
+  });
+
+  it("MQ worker fixture gets MQ deep rules, no web-specific rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/mq-worker-risky");
+    expect(inventory.projectKind).toBe("mq-worker");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-MQ-"))).toBe(true);
+    expect(ruleIds).not.toContain("DK-CSP-001");
+    expect(ruleIds).not.toContain("DK-HTTPS-001");
+  });
+
+  it("cron job fixture gets cron deep rules, no web-specific rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/cron-job-risky");
+    expect(inventory.projectKind).toBe("cron-job");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-CRON-"))).toBe(true);
+    expect(ruleIds).not.toContain("DK-CSP-001");
+    expect(ruleIds).not.toContain("DK-HTTPS-001");
+  });
+
+  it("serverless fixture gets serverless deep rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/serverless-risky");
+    expect(inventory.projectKind).toBe("serverless-func");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-SLS-"))).toBe(true);
+  });
+
+  it("desktop app fixture gets desktop deep rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/desktop-risky");
+    expect(inventory.projectKind).toBe("desktop-app");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-DESK-"))).toBe(true);
+  });
+
+  it("IaC fixture gets IaC deep rules, no web-specific rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/iac-risky");
+    expect(inventory.projectKind).toBe("iac");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-IAC-"))).toBe(true);
+    expect(ruleIds).not.toContain("DK-CSP-001");
+    expect(ruleIds).not.toContain("DK-HTTPS-001");
+  });
 });

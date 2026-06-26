@@ -9,7 +9,7 @@ export function ssrfRule(route: RouteSourceEvidence): Finding[] {
       ruleId: "DK-SSRF-001",
       title: "HTTP request made with potentially user-controlled URL",
       severity: "blocker",
-      confidence: "medium",
+      confidence: "low",
       entryPoint: route.path,
       capability: "Makes outbound HTTP request with user-influenced URL",
       asset: "internal network and external services",
