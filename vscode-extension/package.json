@@ -1,0 +1,26 @@
+{
+  "name": "demokiller",
+  "displayName": "Demo Killer",
+  "description": "Production readiness gate for your project",
+  "version": "0.1.0",
+  "publisher": "demokiller",
+  "engines": { "vscode": "^1.85.0" },
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [{
+      "command": "demokiller.inspect",
+      "title": "Demo Killer: Inspect Project"
+    }],
+    "configuration": {
+      "title": "Demo Killer",
+      "properties": {
+        "demokiller.runOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run inspection on file save"
+        }
+      }
+    }
+  }
+}
