@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function wasmModuleFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -31,16 +10,18 @@ export async function wasmModuleFindings(root: string, inventory: ProjectInvento
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
   // DK-WASM-001: Memory safety - check unsafe/ptr::read/ptr::write/mem::transmute without bounds check/null check
-  const unsafeRe = /\b(unsafe|ptr::read|ptr::write|mem::transmute)\b/g;
+  // Skip lines that are comments (// or /* or *)
+  const unsafeRe = /^\s*(?:\/\/|[*]|\/\*)/ ;
+  const unsafeKeywordsRe = /\b(unsafe|ptr::read|ptr::write|mem::transmute)\b/;
   const boundsRe = /\b(bounds.*check|null.*check)\b/gi;
-  const unsafeMatches = allContent.match(unsafeRe);
   const boundsMatches = allContent.match(boundsRe);
-  if (unsafeMatches && (!boundsMatches || boundsMatches.length === 0)) {
+  if (!boundsMatches || boundsMatches.length === 0) {
     const affectedFiles: string[] = [];
     for (const f of files) {
       const content = await readFileContent(root, f);
-      if (unsafeRe.test(content)) affectedFiles.push(f);
-      unsafeRe.lastIndex = 0;
+      const lines = content.split("\n");
+      const hasUnsafe = lines.some(line => !unsafeRe.test(line) && unsafeKeywordsRe.test(line));
+      if (hasUnsafe) affectedFiles.push(f);
     }
     for (const f of affectedFiles) {
       findings.push({
@@ -66,8 +47,8 @@ export async function wasmModuleFindings(root: string, inventory: ProjectInvento
     }
   }
 
-  // DK-WASM-002: Input validation - check exported functions taking &str/JsValue/String without validation
-  const exportFnRe = /pub\s+fn\s+\w+\s*\([^)]*(?:&str|JsValue|String)[^)]*\)/g;
+  // DK-WASM-002: Input validation - check exported WASM functions without validation
+  const exportFnRe = /#\[wasm_bindgen\]\s*(?:pub\s+)?fn|pub\s+fn\s+\w+\s*\([^)]*(?:JsValue|js_sys|wasm_bindgen)[^)]*\)/g;
   const validationRe = /\b(validat|sanitiz|check.*len)\b/gi;
   const exportMatches = allContent.match(exportFnRe);
   const validationMatches = allContent.match(validationRe);
@@ -103,13 +84,15 @@ export async function wasmModuleFindings(root: string, inventory: ProjectInvento
   }
 
   // DK-WASM-003: Panic handling - check unwrap/expect/panic without catch_unwind/set_panic_hook
+  // Skip test files entirely
+  const nonTestFiles = files.filter(f => !/test|spec/i.test(f));
   const panicRe = /\b(unwrap\(\)|expect\(|panic!)\b/g;
   const catchRe = /\b(catch_unwind|set_panic_hook)\b/g;
-  const panicMatches = allContent.match(panicRe);
-  const catchMatches = allContent.match(catchRe);
+  const panicMatches = nonTestFiles.length > 0 ? allContent.match(panicRe) : null;
+  const catchMatches = nonTestFiles.length > 0 ? allContent.match(catchRe) : null;
   if (panicMatches && (!catchMatches || catchMatches.length === 0)) {
     const affectedFiles: string[] = [];
-    for (const f of files) {
+    for (const f of nonTestFiles) {
       const content = await readFileContent(root, f);
       if (panicRe.test(content)) affectedFiles.push(f);
       panicRe.lastIndex = 0;

@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function cicdPipelineFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -31,9 +10,9 @@ export async function cicdPipelineFindings(root: string, inventory: ProjectInven
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
   // DK-CICD-001: Secrets in pipeline - hardcoded passwords, secrets, tokens, api keys, credentials
+  // Exclude ${{ secrets.X }} (GitHub secure ref) and $VAR references — only match literal hardcoded values
   const secretPatterns =
-    /(?:password|secret|token|api[_-]?key|credentials)\s*[:=]\s*["'][^"']+["']/i.test(allContent) ||
-    /(?:password|secret|token|api[_-]?key|credentials)\s*[:=]\s*\$\{[^}]+\}/i.test(allContent);
+    /(?:password|secret|token|api[_-]?key|credentials)\s*[:=]\s*['"][^'"]+['"]/i.test(allContent);
 
   if (secretPatterns) {
     findings.push({
@@ -86,10 +65,12 @@ export async function cicdPipelineFindings(root: string, inventory: ProjectInven
     });
   }
 
-  // DK-CICD-003: No artifact signing - publish/deploy/release without sign/gpg/cosign/sigstore/provenance/sbom
+  // DK-CICD-003: No artifact signing - publish/deploy/release in step names or action refs (not comments)
+  // Require publish/deploy/release in YAML "name:" or "uses:" context; exclude comments (# ...)
+  const lines = allContent.split("\n");
   const hasPublishStep =
-    /\b(?:publish|deploy|release|push)\b/i.test(allContent) &&
-    !/\b(?:sign|gpg|cosign|sigstore|provenance|sbom)\b/i.test(allContent);
+    lines.some(l => /^\s*(?:name|uses)\s*[:=]/i.test(l) && /\b(?:publish|deploy|release|push)\b/i.test(l)) &&
+    !lines.some(l => /\b(?:sign|gpg|cosign|sigstore|provenance|sbom)\b/i.test(l));
 
   if (hasPublishStep) {
     findings.push({

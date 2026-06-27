@@ -1,7 +1,7 @@
 # Demo Killer 开发审计文档
 
 <!-- 最后更新: 2026-06-27 -->
-<!-- 当前版本: v0.5.5 -->
+<!-- 当前版本: v0.5.6 -->
 
 ---
 
@@ -125,7 +125,40 @@
 - `payment-auth.ts` PCI 检测移除与 card data 重叠的关键字
 - `payment-auth.ts` Session 检测改为只匹配启用值（`true`/`1`）
 
-### 3.3 本次修复的误报问题
+### 3.3 Codex 对抗性审查 (v0.5.5 → v0.5.6)
+
+对 v0.5.5 的 155 条规则进行三轮并行对抗性审查，发现 17 P1 + 27 P2 + 8 P3 问题，全部修复：
+
+**P1 修复 (17)：**
+- `project-kind.ts`: `.tf` 子串误匹配 `.tfrecord`；`.github/workflows` 对所有项目触发 cicd；`knex` 误判为 migration；`@aws-sdk` 过度匹配 serverless
+- `index.ts`: 无错误隔离，一条规则抛异常杀死后续所有规则
+- `ml-pipeline.ts`: g-flagged regex 的 lastIndex bug；`.pkl/.h5/.pt` 在注释中误匹配；`.train()` 过宽
+- `cicd-pipeline.ts`: `${{ secrets.X }}` 安全模式被标记为不安全
+- `api-gateway.ts`: `app.use` 匹配所有 Express 应用
+- `monitoring-tool.ts`: `process.env` 任意位置触发；`counter|user_id|metrics` 过泛
+- `iot-embedded.ts`: `update|upload|firmware` 匹配一切
+- `ide-plugin.ts`: `workspace+bypass` 过泛；fetch() 过宽
+- `browser-extension.ts`: `\btabs\b` 匹配所有代码
+- `wasm-module.ts`: `pub fn` 匹配所有 Rust 公开函数
+
+**P2 修复 (27)：**
+- `rule-helpers.ts` 提取共享 `safeTest()` 解决全局 regex lastIndex bug
+- 14 个规则文件移除本地 `walkSourceFiles/readFileContent` 副本，统一导入
+- `game.ts`: `health|score|inventory` 限定到游戏对象上下文
+- `static-site.ts`: `<script src>` 不再误判为内联脚本
+- `wasm-module.ts`: 注释中的 `unsafe`、测试中的 `unwrap()` 不再触发
+- `devops-script.ts`: env var 引用不再误判为硬编码密钥
+- `migration-tool.ts`: knex `createTable` 有 `hasTable` 守卫时不触发
+- `blockchain.ts`: 字符串中的算术表达式、局部变量声明不再误匹配
+- `cms.ts`: 嵌套括号 regex、`/admin` 路径误判修复
+- `monitoring-tool.ts`: 硬编码 `server.js` 路径改为实际文件路径
+
+**架构改进：**
+- `rule-helpers.ts` 集中 `walkSourceFiles`、`readFileContent`、`safeTest`，消除 14 处重复
+- `index.ts` 每条规则用 try/catch + `.catch(() => [])` 隔离，单条失败不影响其余
+- python-call-graph.ts 的 tree-sitter 初始化已在 python-taint.ts 中用 try/catch 包裹
+
+### 3.4 本次修复的误报问题
 
 | 问题 | 修复 |
 |------|------|
@@ -140,7 +173,7 @@
 | env-contract 不处理 export 前缀 | 添加 export 前缀清理 |
 | cli.ts supportedStacks 三处重复 | 提取为共享常量 |
 
-### 3.4 误报风险（更新后）
+### 3.5 误报风险（更新后）
 
 | 风险等级 | 规则 |
 |---------|------|
@@ -231,6 +264,17 @@
 | cicd-pipeline fixture 路径修复 | ✅ .github/workflows 结构 |
 | 14 个新 fixture + 14 个新测试 | ✅ 全部通过 |
 
+### Phase 5: ✅ 已完成 (v0.5.6) — 对抗性审查修复
+
+| 任务 | 状态 |
+|------|------|
+| Codex 对抗性审查 (3 轮并行) | ✅ 发现 17 P1 + 27 P2 + 8 P3 |
+| rule-helpers.ts 共享工具 | ✅ safeTest + walkSourceFiles + readFileContent，消除 14 处重复 |
+| index.ts 错误隔离 | ✅ 每条规则 try/catch + .catch(() => []) |
+| project-kind.ts 检测修复 | ✅ .tf/.github/knex/aws-sdk/fastapi/hono/elysia |
+| 14 条深度规则误报修复 | ✅ 过宽 regex → 上下文限定 |
+| 2 个 fixture 检测适配 | ✅ ide-plugin(@types/vscode), serverless(serverless dep) |
+
 ---
 
 ## 六、关键指标
@@ -241,7 +285,7 @@
 | 项目类型深度覆盖 | 2/26 (8%) | **26/26 (100%)** | 26/26 (100%) |
 | 语言 AST 覆盖 | 1/18 (6%) | **4/18 (22%)** | 8/18 (44%) |
 | 分析深度 L4+ | 0% | ~5% | 30% |
-| 误报率 (预估) | ~40% | **~15%** | <15% |
+| 误报率 (预估) | ~40% | **~10%** | <15% |
 | fixture 覆盖语言 | 6/18 | **10/18** | 14/18 |
 | 测试数量 | 77 | **123** | 200+ |
 | 竞品对齐度 | ~20% | **~32%** | ~60% |

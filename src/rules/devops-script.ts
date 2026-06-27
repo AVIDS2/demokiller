@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function devopsScriptFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -32,7 +11,7 @@ export async function devopsScriptFindings(root: string, inventory: ProjectInven
 
   // DK-DEVOPS-001 (blocker,high): Hardcoded secrets in scripts
   {
-    const secretPattern = /(?:^|[^A-Za-z_])(?:(?:DB_PASSWORD|DEPLOY_KEY|API_KEY|SECRET_KEY|PRIVATE_KEY|AWS_SECRET|GITHUB_TOKEN|NPM_TOKEN|DOCKER_PASSWORD|SSH_PASSWORD)\s*[=:]\s*['"]?[^'"}\s]{6,})/im;
+    const secretPattern = /(?:DB_PASSWORD|DEPLOY_KEY|API_KEY|SECRET_KEY|PRIVATE_KEY|AWS_SECRET|GITHUB_TOKEN|NPM_TOKEN)\s*[=:]\s*['"][^'"]{6,}['"]/im;
     const credentialPattern = /(?:^|[^A-Za-z_])(?:(?:password|secret|token|key|credential)\s*[=:]\s*['"][^'"]{6,}['"])/im;
     if (secretPattern.test(allContent) || credentialPattern.test(allContent)) {
       for (const file of files) {
@@ -105,13 +84,12 @@ export async function devopsScriptFindings(root: string, inventory: ProjectInven
 
   // DK-DEVOPS-003 (medium,medium): Unpinned versions in docker/package installs
   {
-    const unpinnedDocker = /\bdocker\s+pull\s+\S+:(?:latest|stable|edge|\$)/m;
-    const unpinnedApt = /\b(?:apt-get?|yum|apk)\s+install\s+(?!.*=)/m;
+    const unpinnedDocker = /\bdocker\s+pull\s+\S+:(?:latest|stable|edge)\b/m;
     const unpinnedNpm = /\bnpm\s+install\s+(?:-g\s+)?(?!.*@)(?![\.\-\/])/m;
-    if (unpinnedDocker.test(allContent) || unpinnedApt.test(allContent) || unpinnedNpm.test(allContent)) {
+    if (unpinnedDocker.test(allContent) || unpinnedNpm.test(allContent)) {
       for (const file of files) {
         const content = await readFileContent(root, file);
-        if (unpinnedDocker.test(content) || unpinnedApt.test(content) || unpinnedNpm.test(content)) {
+        if (unpinnedDocker.test(content) || unpinnedNpm.test(content)) {
           findings.push({
             ruleId: "DK-DEVOPS-003",
             title: "Unpinned package/image versions in deployment script",
@@ -133,7 +111,7 @@ export async function devopsScriptFindings(root: string, inventory: ProjectInven
               detector: "pattern-match",
               location: { path: file },
               controls: [],
-              signals: ["docker pull with :latest or missing version tag", "or unpinned apt/yum/npm install"]
+              signals: ["docker pull with :latest or missing version tag", "or unpinned npm install"]
             }]
           });
         }
@@ -143,7 +121,7 @@ export async function devopsScriptFindings(root: string, inventory: ProjectInven
 
   // DK-DEVOPS-004 (high,medium): curl|bash / wget|sh pattern
   {
-    const curlBashPattern = /\bcurl\b.*\|\s*(?:ba)?sh\b|\bwget\b.*\|\s*(?:ba)?sh\b|\bcurl\b.*&&\s*(?:ba)?sh\b|\bwget\b.*&&\s*(?:ba)?sh\b/m;
+    const curlBashPattern = /\bcurl\b[^|&]*\|\s*(?:ba)?sh\b|\bwget\b[^|&]*\|\s*(?:ba)?sh\b/m;
     if (curlBashPattern.test(allContent)) {
       for (const file of files) {
         const content = await readFileContent(root, file);

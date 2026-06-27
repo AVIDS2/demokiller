@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function gameFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -57,9 +36,9 @@ export async function gameFindings(root: string, inventory: ProjectInventory): P
   }
 
   // DK-GAME-002: Unbounded game loop
-  const gameLoopPattern = /(?:requestAnimationFrame|setInterval|gameLoop)\s*\(/gi;
+  const gameLoopPattern = /(?:setInterval|requestAnimationFrame)\s*\(\s*(?:update|gameLoop|tick|render|draw|animate)/i;
   const loopControlPattern = /(?:deltaTime|frameSkip|maxFPS|tickRate|fps\s*cap|frame\s*limit)/i;
-  const loopMatches = allContent.match(gameLoopPattern) || [];
+  const loopMatches = allContent.match(new RegExp(gameLoopPattern.source, "gi")) || [];
   if (loopMatches.length > 0 && !loopControlPattern.test(allContent)) {
     findings.push({
       ruleId: "DK-GAME-002",
@@ -83,9 +62,19 @@ export async function gameFindings(root: string, inventory: ProjectInventory): P
   }
 
   // DK-GAME-003: Client-side game state
-  const statePattern = /(?:score|health|currency|inventory|lives|mana)\s*[=:+]/gi;
+  const statePatterns = [
+    /(?:player|character|entity|sprite)\s*\.\s*(?:health|lives|mana)\s*[=:+]/i,
+    /(?:player|game|match)\s*\.\s*score\s*[=:+]/i,
+    /(?:player|character)\s*\.\s*inventory\s*[=:+]/i,
+    /currency\s*[=:+]/i,
+  ];
   const serverValidationPattern = /(?:server.*valid|authoritative|anti.?cheat|server.*sync|server.*state)/i;
-  const stateMatches = allContent.match(statePattern) || [];
+  const stateMatches: string[] = [];
+  for (const pat of statePatterns) {
+    const globalPat = new RegExp(pat.source, "gi");
+    const m = allContent.match(globalPat);
+    if (m) stateMatches.push(...m);
+  }
   if (stateMatches.length > 0 && !serverValidationPattern.test(allContent)) {
     findings.push({
       ruleId: "DK-GAME-003",

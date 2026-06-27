@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function apiGatewayFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -30,8 +9,9 @@ export async function apiGatewayFindings(root: string, inventory: ProjectInvento
   if (files.length === 0) return [];
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
-  // DK-APIGW-001: No rate limiting
-  if (/(?:express|app\.use|app\.listen)/.test(allContent) && !/(?:rate[\s_-]*limit|throttle|rateLimit|express-rate-limit)/i.test(allContent)) {
+  // DK-APIGW-001: No rate limiting — only fire if project has gateway-specific patterns (proxy middleware, route aggregation)
+  const hasGatewayIndicators = /createProxyMiddleware|http-proxy-middleware|express-rate-limit|express-gateway|\bkong\b|app\.use\(\s*['"]\/(?:api\/v\d+|v\d+)/i.test(allContent);
+  if (hasGatewayIndicators && !/(?:rate[\s_-]*limit|throttle|rateLimit|express-rate-limit)/i.test(allContent)) {
     findings.push({
       ruleId: "DK-APIGW-001",
       title: "No rate limiting detected on API gateway",
@@ -81,8 +61,12 @@ export async function apiGatewayFindings(root: string, inventory: ProjectInvento
     });
   }
 
-  // DK-APIGW-004: Backend SSRF via proxy
-  if (/(?:createProxyMiddleware|proxy|target)/.test(allContent) && !/(?:allowlist|whitelist|validat.*url|allowedHosts|isAllowedHost)/i.test(allContent)) {
+  // DK-APIGW-004: Backend SSRF via proxy — require `target` near proxy context (createProxyMiddleware, proxy setup)
+  const lines = allContent.split("\n");
+  const hasProxyTarget = lines.some(l =>
+    /createProxyMiddleware|http-proxy|proxy/i.test(l) && /target/i.test(l)
+  );
+  if (hasProxyTarget && !/(?:allowlist|whitelist|validat.*url|allowedHosts|isAllowedHost)/i.test(allContent)) {
     findings.push({
       ruleId: "DK-APIGW-004",
       title: "Server-Side Request Forgery risk via proxy configuration",

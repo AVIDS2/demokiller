@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function idePluginFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -30,8 +9,11 @@ export async function idePluginFindings(root: string, inventory: ProjectInventor
   if (files.length === 0) return [];
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
-  // DK-IDE-001 (high,medium): Workspace trust bypass - check workspace.*trust with bypass/ignore/skip/override
-  if (/workspace[\s\S]{0,40}trust/i.test(allContent) && /bypass|ignore|skip|override/i.test(allContent)) {
+  // DK-IDE-001 (high,medium): Workspace trust bypass
+  // Require VS Code workspace trust API context, not generic "workspace" + "trust" words
+  const hasWorkspaceTrustApi = /(?:workspace\.getConfiguration|isTrusted|trustWorkspace|workspace\.trust)/i;
+  const hasBypass = /bypass|ignore|skip|override/i;
+  if (safeTest(hasWorkspaceTrustApi, allContent) && safeTest(hasBypass, allContent)) {
     findings.push({
       ruleId: "DK-IDE-001",
       title: "Workspace trust bypass detected",
@@ -49,15 +31,18 @@ export async function idePluginFindings(root: string, inventory: ProjectInventor
       evidence: [{
         id: "IDE-001-1",
         detector: "pattern-match",
-        location: { path: "(workspace trust + bypass pattern detected in source)" },
+        location: { path: "(workspace trust API + bypass pattern detected in source)" },
         controls: [],
-        signals: ["workspace.*trust pattern matched", "bypass/ignore/skip/override keyword present"]
+        signals: ["VS Code workspace trust API pattern matched", "bypass/ignore/skip/override keyword present"]
       }]
     });
   }
 
-  // DK-IDE-002 (blocker,high): Arbitrary command execution - check child_process/exec/execSync/spawn/shell.exec without sandbox/allowlist
-  if (/(child_process|execSync|shell\.exec|\.exec\(|\.spawn\()/i.test(allContent) && !/(sandbox|allowlist|whitelist|approved[_-]?commands)/i.test(allContent)) {
+  // DK-IDE-002 (blocker,high): Arbitrary command execution
+  // Require child_process module name — .exec() alone matches RegExp.exec() etc.
+  const hasExec = /(child_process|execSync|shell\.exec|spawnSync)\b/;
+  const hasExecMitigation = /(sandbox|allowlist|whitelist|approved[_-]?commands)/i;
+  if (safeTest(hasExec, allContent) && !safeTest(hasExecMitigation, allContent)) {
     findings.push({
       ruleId: "DK-IDE-002",
       title: "Arbitrary command execution without sandbox or allowlist",
@@ -77,15 +62,18 @@ export async function idePluginFindings(root: string, inventory: ProjectInventor
       evidence: [{
         id: "IDE-002-1",
         detector: "pattern-match",
-        location: { path: "(child_process/exec/spawn usage detected in source)" },
+        location: { path: "(child_process/execSync/shell.exec/spawnSync usage detected in source)" },
         controls: [],
-        signals: ["child_process or exec/spawn pattern matched", "no sandbox/allowlist/whitelist pattern found"]
+        signals: ["child_process or execSync/shell.exec/spawnSync pattern matched", "no sandbox/allowlist/whitelist pattern found"]
       }]
     });
   }
 
-  // DK-IDE-003 (medium,medium): Network without consent - check fetch/axios/request/https.get without user.*consent/opt.in/telemetry.*opt
-  if (/(fetch\(|axios\.|https?\.get|request\(|XMLHttpRequest)/i.test(allContent) && !/(user[\s\S]{0,30}consent|opt[\s-]?in|telemetry[\s\S]{0,20}opt|ask[\s\S]{0,20}permission)/i.test(allContent)) {
+  // DK-IDE-003 (medium,medium): Network without consent
+  // Require non-trivial external URL (not localhost) in fetch/axios/https.get
+  const hasNetworkRequest = /(?:fetch|axios\.|https?\.get)\s*\(\s*["']https?:\/\/(?!localhost)/;
+  const hasConsent = /user[\s\S]{0,30}consent|opt[\s-]?in|telemetry[\s\S]{0,20}opt|ask[\s\S]{0,20}permission/i;
+  if (safeTest(hasNetworkRequest, allContent) && !safeTest(hasConsent, allContent)) {
     findings.push({
       ruleId: "DK-IDE-003",
       title: "Network request without user consent",
@@ -105,9 +93,9 @@ export async function idePluginFindings(root: string, inventory: ProjectInventor
       evidence: [{
         id: "IDE-003-1",
         detector: "pattern-match",
-        location: { path: "(network request without consent pattern detected in source)" },
+        location: { path: "(external network request without consent pattern detected in source)" },
         controls: [],
-        signals: ["fetch/axios/request pattern matched", "no user consent/opt-in pattern found"]
+        signals: ["fetch/axios/https.get with external URL matched", "no user consent/opt-in pattern found"]
       }]
     });
   }

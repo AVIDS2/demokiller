@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function migrationToolFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -42,7 +21,6 @@ export async function migrationToolFindings(root: string, inventory: ProjectInve
     {
       const nonIdempotentPatterns = [
         { pattern: /CREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS)/i, signal: "CREATE TABLE without IF NOT EXISTS" },
-        { pattern: /\.createTable\s*\(\s*['"][^'"]+['"]\s*,/i, signal: "knex .createTable() without idempotent guard" },
         { pattern: /ALTER\s+TABLE\s+\S+\s+ADD\s+(?!IF\s+NOT\s+EXISTS)/i, signal: "ALTER TABLE ADD without IF NOT EXISTS" },
         { pattern: /\.alterTable\s*\(\s*['"][^'"]+['"]\s*,/i, signal: "knex .alterTable() without idempotent guard" },
         { pattern: /INSERT\s+INTO\s+(?!.*ON\s+CONFLICT|.*ON\s+DUPLICATE|.*UPSERT)/i, signal: "INSERT INTO without upsert/on-conflict" },
@@ -73,6 +51,38 @@ export async function migrationToolFindings(root: string, inventory: ProjectInve
               location: { path: file },
               controls: [],
               signals: [signal],
+            }],
+          });
+        }
+      }
+      // Knex createTable() only fires if there's no preceding hasTable guard
+      const knexCreateTable = /\.createTable\s*\(\s*['"][^'"]+['"]\s*,/i;
+      if (knexCreateTable.test(content)) {
+        const hasIdempotentGuard = /knex\.schema\.hasTable|schema\.hasTable/i.test(content);
+        if (!hasIdempotentGuard) {
+          findings.push({
+            ruleId: "DK-MIG-001",
+            title: "Non-idempotent migration operation",
+            severity: "high",
+            confidence: "medium",
+            missingControls: [
+              "Use IF NOT EXISTS / IF EXISTS guards on DDL statements",
+              "Use ON CONFLICT / ON DUPLICATE KEY for upsert semantics",
+              "Ensure migration can be re-run safely without error",
+            ],
+            consequence: "Re-running the migration after a partial failure will error, leaving the database in an inconsistent state that is hard to recover from.",
+            acceptanceCriteria: [
+              "All CREATE TABLE statements include IF NOT EXISTS",
+              "All ALTER TABLE statements include IF EXISTS guards",
+              "All INSERT statements use upsert or ON CONFLICT patterns",
+              "Migration can be executed multiple times with identical final state",
+            ],
+            evidence: [{
+              id: `MIG-001-${file}`,
+              detector: "pattern-match",
+              location: { path: file },
+              controls: [],
+              signals: ["knex .createTable() without idempotent guard"],
             }],
           });
         }
@@ -120,7 +130,7 @@ export async function migrationToolFindings(root: string, inventory: ProjectInve
     // DK-MIG-003: No rollback
     {
       const hasUp = /\bexports\.up\b|^async\s+up\s*\(/im.test(content);
-      const hasDown = /\bexports\.down\b|^async\s+down\s*\(/im.test(content);
+      const hasDown = /\bexports\.down\s*=|^async\s+down\s*\(/im.test(content);
       if (hasUp && !hasDown) {
         findings.push({
           ruleId: "DK-MIG-003",

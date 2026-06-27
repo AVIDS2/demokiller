@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function blockchainFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -91,7 +70,19 @@ export async function blockchainFindings(root: string, inventory: ProjectInvento
     if (version >= 0.8) continue; // Solidity 0.8+ has built-in overflow checks
     const hasSafeMath = /SafeMath|using\s+SafeMath/.test(content);
     const hasArithmetic = /[^=!<>][+\-*][^>+*]|[^=!<>][+\-*]=/.test(content);
-    if (hasArithmetic && !hasSafeMath) {
+    // Filter out string literals to reduce false positives (e.g. "hello-world" matching arithmetic)
+    const hasArithmeticOutsideStrings = (() => {
+      const lines = content.split("\n");
+      for (const line of lines) {
+        // Skip lines that are pure string assignments or comments
+        const stripped = line.replace(/\/\/.*$/, "").replace(/\/\*.*?\*\//g, "");
+        // Remove string literals to avoid matching "hello-world"
+        const noStrings = stripped.replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/g, '""');
+        if (/[^=!<>][+\-*][^>+*]|[^=!<>][+\-*]=/.test(noStrings)) return true;
+      }
+      return false;
+    })();
+    if (hasArithmeticOutsideStrings && !hasSafeMath) {
       findings.push({
         ruleId: "DK-CHAIN-002",
         title: "Integer overflow risk: arithmetic without SafeMath",
@@ -179,8 +170,8 @@ export async function blockchainFindings(root: string, inventory: ProjectInvento
         bodyEnd++;
       }
       const body = content.slice(braceIndex, bodyEnd);
-      // Check if function modifies state (assignment to storage)
-      const modifiesState = /\w+\s*[-+]?=\s*[^=]/.test(body) && !/view|pure/.test(match[0]);
+      // Check if function modifies state (assignment to storage), excluding local variable declarations
+      const modifiesState = /\w+\s*[-+]?=\s*[^=]/.test(body) && !/view|pure/.test(match[0]) && !/^\s*(uint|int|bool|address|string|bytes|mapping)\s+\w+\s*=\s*[^=]/m.test(body);
       if (!modifiesState) continue;
       // Check if function has access control
       const hasAccessControl =

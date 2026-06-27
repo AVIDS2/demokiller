@@ -1,1 +1,1 @@
-{"name":"ide-risky","dependencies":{"vscode":"^1.85.0"}}
+{"name":"ide-risky","dependencies":{"@types/vscode":"^1.85.0","@vscode/vsce":"^1.90.0"}}

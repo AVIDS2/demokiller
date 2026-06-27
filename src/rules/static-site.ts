@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function staticSiteFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -83,8 +62,8 @@ export async function staticSiteFindings(root: string, inventory: ProjectInvento
     });
   }
 
-  // DK-STATIC-003: Inline script without nonce
-  const scriptTagRegex = /<script(?![^>]*\bnonce\b)[^>]*>/gi;
+  // DK-STATIC-003: Inline script without nonce (skip external scripts with src attribute)
+  const scriptTagRegex = /<script(?![^>]*\bsrc\b)(?![^>]*\bnonce\b)[^>]*>/gi;
   const inlineScripts = allContent.match(scriptTagRegex);
   if (inlineScripts && inlineScripts.length > 0) {
     findings.push({
@@ -118,8 +97,7 @@ export async function staticSiteFindings(root: string, inventory: ProjectInvento
     "doubleclick.net",
     "hotjar.com",
     "segment.com",
-    "mixpanel.com",
-    "pixel"
+    "mixpanel.com"
   ];
   const trackingPattern = new RegExp(
     `(?:src|href)\\s*=\\s*["']https?://[^"']*(?:${trackingDomains.map(d => d.replace(/\./g, "\\.")).join("|")})[^"']*["']`,

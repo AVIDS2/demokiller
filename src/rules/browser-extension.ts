@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function browserExtensionFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -31,9 +10,10 @@ export async function browserExtensionFindings(root: string, inventory: ProjectI
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
   // DK-EXT-001: Overly broad permissions without optional_permissions/activeTab
+  // Match "tabs" only in manifest permission declarations, not generic code
   const hasBroadPermissions =
     /["<]all_urls[">]/i.test(allContent) ||
-    /\btabs\b/.test(allContent) ||
+    /"permissions"\s*:\s*\[[^\]]*"tabs"/.test(allContent) ||
     /\bwebRequest\b/.test(allContent) ||
     /\bdebugger\b/.test(allContent);
 
@@ -92,12 +72,31 @@ export async function browserExtensionFindings(root: string, inventory: ProjectI
   }
 
   // DK-EXT-003: eval/innerHTML/dangerous DOM manipulation
+  // Per-file scan: skip lines that are comments (start with // or *)
   const evalSignals: string[] = [];
-  if (/\beval\s*\(/.test(allContent)) evalSignals.push("eval() call detected");
-  if (/new\s+Function\s*\(/.test(allContent)) evalSignals.push("new Function() call detected");
-  if (/\.innerHTML\s*[=+]/.test(allContent)) evalSignals.push("innerHTML assignment detected");
-  if (/\.outerHTML\s*[=+]/.test(allContent)) evalSignals.push("outerHTML assignment detected");
-  if (/document\.write\s*\(/.test(allContent)) evalSignals.push("document.write() call detected");
+  const dangerChecks: [RegExp, string][] = [
+    [/\beval\s*\(/, "eval() call detected"],
+    [/new\s+Function\s*\(/, "new Function() call detected"],
+    [/\.innerHTML\s*[=+]/, "innerHTML assignment detected"],
+    [/\.outerHTML\s*[=+]/, "outerHTML assignment detected"],
+    [/document\.write\s*\(/, "document.write() call detected"],
+  ];
+
+  // Scan each file line-by-line, skipping comment lines
+  for (const file of files) {
+    const content = await readFileContent(root, file);
+    const lines = content.split("\n");
+    for (const line of lines) {
+      const trimmed = line.trimStart();
+      // Skip single-line comments and block-comment continuation lines
+      if (trimmed.startsWith("//") || trimmed.startsWith("*")) continue;
+      for (const [re, label] of dangerChecks) {
+        if (re.test(line) && !evalSignals.includes(label)) {
+          evalSignals.push(label);
+        }
+      }
+    }
+  }
 
   if (evalSignals.length > 0) {
     findings.push({

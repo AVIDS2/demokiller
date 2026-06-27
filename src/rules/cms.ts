@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function cmsFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -30,15 +9,26 @@ export async function cmsFindings(root: string, inventory: ProjectInventory): Pr
   if (files.length === 0) return [];
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
-  // DK-CMS-001 (blocker,high): SQL/NoSQL injection - check query with user input (ctx.query/ctx.params/req.body) without sanitiz/validat/escape/ORM
+  // DK-CMS-001 (blocker,high): SQL/NoSQL injection - check query methods with user input without sanitiz/validat/escape/ORM
   {
-    const injectionPattern = /(?:strapi\.db\.query|\.query\(|\.findMany|\.findOne|\.delete|\.update|\.create)\s*\([^)]*?(?:ctx\.query|ctx\.params|req\.body|req\.query|req\.params)[^)]*?\)/g;
     const hasSanitization = /sanitiz|validat|escape|parameterize|prepared/i.test(allContent);
-    if (injectionPattern.test(allContent) && !hasSanitization) {
+    // Check each query method separately to avoid nested-paren regex issues
+    const queryMethods = [
+      /strapi\.db\.query\s*\(/,
+      /\.query\s*\(/,
+      /\.findMany\s*\(/,
+      /\.findOne\s*\(/,
+      /\.delete\s*\(/,
+      /\.update\s*\(/,
+      /\.create\s*\(/,
+    ];
+    const userInputPattern = /ctx\.query|ctx\.params|req\.body|req\.query|req\.params/;
+    if (!hasSanitization) {
       for (const file of files) {
         const content = await readFileContent(root, file);
-        const filePattern = /(?:strapi\.db\.query|\.query\(|\.findMany|\.findOne|\.delete|\.update|\.create)\s*\([^)]*?(?:ctx\.query|ctx\.params|req\.body|req\.query|req\.params)[^)]*?\)/g;
-        if (filePattern.test(content)) {
+        const hasQueryMethod = queryMethods.some(re => re.test(content));
+        const hasUserInput = userInputPattern.test(content);
+        if (hasQueryMethod && hasUserInput) {
           findings.push({
             ruleId: "DK-CMS-001",
             title: "SQL/NoSQL injection risk: user input passed to database query without sanitization",
@@ -56,7 +46,7 @@ export async function cmsFindings(root: string, inventory: ProjectInventory): Pr
               detector: "pattern-match",
               location: { path: file },
               controls: [],
-              signals: ["User input from ctx.query/ctx.params/req.body used directly in database query", "No sanitization, validation, or escape functions detected in codebase"]
+              signals: ["User input from ctx.query/ctx.params/req.body found in same file as database query call", "No sanitization, validation, or escape functions detected in codebase"]
             }]
           });
         }
@@ -66,7 +56,7 @@ export async function cmsFindings(root: string, inventory: ProjectInventory): Pr
 
   // DK-CMS-002 (high,medium): Unrestricted admin access - check admin/api routes without auth/role/permission check
   {
-    const adminRoutePattern = /(?:\/admin|\/api\/admin|isAdmin|adminOnly|admin.*route)/i;
+    const adminRoutePattern = /(?:router\.(?:get|post|put|delete|use)\s*\(\s*['"]\/admin|app\.(?:get|post|put|delete|use)\s*\(\s*['"]\/admin|isAdmin|adminOnly|admin.*(?:route|controller|policy)|strapi\.admin)/i;
     const hasAuthCheck = /auth|role|permission|middleware.*auth|isAuthenticated|protect|guard/i.test(allContent);
     if (adminRoutePattern.test(allContent) && !hasAuthCheck) {
       for (const file of files) {

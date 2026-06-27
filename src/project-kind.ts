@@ -28,24 +28,26 @@ export function detectProjectKind(deps: Record<string, string>, files: string[])
   // IaC (check before testing frameworks which may pull in cdk)
   if (depNames.some(d => d.includes("cdktf") || d.includes("pulumi") || d.includes("terraform"))) return "iac";
   // File-based IaC detection (pure .tf files without npm packages)
-  if (fileStr.includes(".tf") || fileStr.includes(".tfvars") || fileStr.includes("cloudformation") || fileStr.includes("pulumi")) return "iac";
+  if (fileStr.includes(".tf ") || fileStr.endsWith(".tf") || fileStr.includes(".tfvars") || fileStr.includes("cloudformation") || fileStr.includes("pulumi")) return "iac";
   // Message queues
   if (depNames.some(d => d === "kafkajs" || d === "amqplib" || d === "bullmq" || d === "bull")) return "mq-worker";
   // Cron
   if (depNames.some(d => d === "node-cron" || d === "node-schedule" || d === "celery")) return "cron-job";
   // Serverless
-  if (depNames.some(d => d.includes("serverless") || d === "@aws-lambda" || d.startsWith("@aws-sdk"))) return "serverless-func";
+  if (depNames.some(d => d.includes("serverless") || d === "@aws-lambda")) return "serverless-func";
   // File-based serverless detection
   if (fileStr.includes("serverless.yml") || fileStr.includes("template.yaml") || fileStr.includes("samconfig.toml")) return "serverless-func";
   // API gateways
   if (depNames.some(d => d === "kong" || d === "express-gateway")) return "api-gateway";
   if (fileStr.includes("kong.yml") || fileStr.includes("kong.yaml")) return "api-gateway";
   // IDE plugins
-  if (depNames.some(d => d === "vscode" || d === "@types/vscode" || d === "vsce")) return "ide-plugin";
+  if (depNames.some(d => d === "@types/vscode" || d === "@vscode/vsce")) return "ide-plugin";
   // CI/CD pipelines
-  if (fileStr.includes(".github/workflows") || fileStr.includes("jenkinsfile") || fileStr.includes(".gitlab-ci") || fileStr.includes(".circleci")) return "cicd-pipeline";
+  if (fileStr.includes("jenkinsfile") || fileStr.includes(".gitlab-ci") || fileStr.includes(".circleci")) return "cicd-pipeline";
+  if (fileStr.includes(".github/workflows") && depNames.length === 0) return "cicd-pipeline";
   // Migration tools
-  if (depNames.some(d => d === "knex" || d === "sequelize-cli" || d === "flyway" || d === "alembic")) return "migration-tool";
+  if (depNames.some(d => d === "sequelize-cli" || d === "flyway" || d === "alembic" || d === "typeorm" || d === "prisma")) return "migration-tool";
+  if (depNames.some(d => d === "knex") && fileStr.includes("migrations")) return "migration-tool";
   // WASM modules
   if (depNames.some(d => d === "wasm-pack" || d === "assemblyscript" || d === "wasm-bindgen")) return "wasm-module";
   if (fileStr.includes(".wasm") || fileStr.includes("wasm-pack")) return "wasm-module";
@@ -54,15 +56,17 @@ export function detectProjectKind(deps: Record<string, string>, files: string[])
   if (fileStr.includes("platformio.ini") || fileStr.includes("arduino") || fileStr.includes(".ino")) return "iot-embedded";
   // DevOps scripts
   if (depNames.some(d => d === "shelljs" || d === "zx")) return "devops-script";
-  if (fileStr.includes("makefile") || fileStr.includes("dockerfile") && !fileStr.includes("src/")) return "devops-script";
+  if ((fileStr.includes("makefile") || fileStr.includes("dockerfile")) && !fileStr.includes("src/")) return "devops-script";
   // Monitoring tools
   if (depNames.some(d => d === "prom-client" || d === "@grafana/ui" || d === "statsd" || d === "datadog")) return "monitoring-tool";
   // CMS
   if (depNames.some(d => d === "strapi" || d === "directus" || d === "@keystone-6/core" || d === "payload" || d === "sanity")) return "cms";
   // Web frameworks (generic — after domain-specific to avoid stripe+express → web-app)
   if (depNames.some(d => d === "next" || d === "@nestjs/core" || d === "react" || d === "vue" || d === "svelte" || d === "angular" || d === "express" || d === "fastify" || d === "flask" || d === "django" || d === "gin" || d === "actix-web")) return "web-app";
-  // Static site generators
-  if (depNames.some(d => d === "astro" || d === "gatsby" || d === "hugo" || d === "next" && depNames.some(x => x === "sharp" || x === "rehype"))) return "static-site";
+  // Additional web frameworks
+  if (depNames.some(d => d === "fastapi" || d === "hono" || d === "elysia")) return "web-app";
+  // Static site generators (must be after web frameworks)
+  if (depNames.some(d => d === "astro" || d === "gatsby" || d === "hugo" || d === "@11ty/eleventy")) return "static-site";
   // Browser extensions
   if (depNames.some(d => d === "webextension-polyfill" || d === "@types/chrome")) return "browser-extension";
   // CLI frameworks (must be before testing which may pull in commander)
@@ -74,6 +78,8 @@ export function detectProjectKind(deps: Record<string, string>, files: string[])
 
   // File-based detection
   if (fileStr.includes("bin/") || fileStr.includes("src/cli") || fileStr.includes("command")) return "cli-tool";
+  // Testing frameworks (before library-sdk catch-all)
+  if (depNames.some(d => d === "jest" || d === "vitest" || d === "mocha" || d === "@playwright/test" || d === "cypress")) return "unknown";
   if (depNames.length > 0 && !fileStr.includes("route") && !fileStr.includes("api/")) return "library-sdk";
 
   return "unknown";

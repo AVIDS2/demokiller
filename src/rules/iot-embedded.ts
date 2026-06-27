@@ -1,27 +1,6 @@
 import type { Finding } from "../types.js";
 import type { ProjectInventory } from "../inventory.js";
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules","dist","build",".git","__pycache__","target","vendor"]);
-  const results: string[] = [];
-  async function walk(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const e of entries) {
-      if (SKIP.has(e.name)) continue;
-      const full = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(full);
-      else if (exts.some(ext => e.name.endsWith(ext))) results.push(path.relative(root, full));
-    }
-  }
-  await walk(root);
-  return results;
-}
-
-async function readFileContent(root: string, file: string): Promise<string> {
-  try { return await fs.readFile(path.join(root, file), "utf8"); } catch { return ""; }
-}
+import { walkSourceFiles, readFileContent, safeTest } from "./rule-helpers.js";
 
 export async function iotEmbeddedFindings(root: string, inventory: ProjectInventory): Promise<Finding[]> {
   const findings: Finding[] = [];
@@ -31,8 +10,8 @@ export async function iotEmbeddedFindings(root: string, inventory: ProjectInvent
   const allContent = (await Promise.all(files.map(f => readFileContent(root, f)))).join("\n");
 
   // DK-IOT-001 (blocker,high): Hardcoded credentials
-  // Check ssid/password/api_key/token with hardcoded string values
-  const credentialPattern = /(ssid|password|api_key|token|secret|wifi_pass)\s*=\s*["'][^"']+["']/gi;
+  // Check password/api_key/token/secret/wifi_pass with hardcoded string values (NOT ssid — it is publicly broadcast)
+  const credentialPattern = /(password|api_key|token|secret|wifi_pass)\s*=\s*["'][^"']+["']/gi;
   const credentialFiles = new Map<string, string[]>();
   for (const file of files) {
     const content = await readFileContent(root, file);
@@ -65,8 +44,8 @@ export async function iotEmbeddedFindings(root: string, inventory: ProjectInvent
   }
 
   // DK-IOT-002 (high,medium): Insecure transport
-  // Check http:// URLs (not https://) for API/server connections
-  const insecureUrlPattern = /["']http:\/\/[^"']+["']/gi;
+  // Check http:// URLs (not https://) — exclude localhost and 127.0.0.1
+  const insecureUrlPattern = /["']http:\/\/(?!localhost|127\.0\.0\.1)[^"']+["']/gi;
   const insecureUrlFiles = new Map<string, string[]>();
   for (const file of files) {
     const content = await readFileContent(root, file);
@@ -99,15 +78,15 @@ export async function iotEmbeddedFindings(root: string, inventory: ProjectInvent
   }
 
   // DK-IOT-003 (high,medium): No secure boot / firmware signing
-  // Check OTA/update/upload without sign/verify/hash/checksum/signature
-  const otaPattern = /(ota|update|upload|firmware)[^;]*;/gi;
+  // Check OTA/firmware operations without sign/verify/hash/checksum/signature
+  const otaPattern = /(ota[_-]?update|firmware[_-]?(?:update|upload|download)|OTA\s+FOTA)\b/i;
   const signingPattern = /(sign|verify|hash|checksum|signature|digest)/i;
   const otaFiles = new Map<string, string[]>();
   for (const file of files) {
     const content = await readFileContent(root, file);
     const otaMatches = content.match(otaPattern);
     if (otaMatches && !signingPattern.test(content)) {
-      otaFiles.set(file, otaMatches);
+      otaFiles.set(file, [otaMatches[0]]);
     }
   }
   if (otaFiles.size > 0) {
