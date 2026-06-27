@@ -210,8 +210,13 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
       "httpx.get", "httpx.post", "httpx.put",
       "httpx.delete", "httpx.patch",
       "urllib.request.urlopen",
-      "open", "Path",
     ]);
+
+    // Sinks that are only dangerous when their argument is actually tainted,
+    // not when they are merely referenced (e.g. passed as a callback).
+    // open() and Path() are called in every Python file for config/IO/logging;
+    // flagging every call chain that *reaches* open() produces massive false positives.
+    const ARG_SENSITIVE_SINKS = new Set(["open", "Path"]);
 
     // Sanitization functions that neutralize tainted data
     const SANITIZERS = new Set([
@@ -247,7 +252,7 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
 
     // Trace taint from route handlers to dangerous sinks via BFS
     const visited = new Set<string>();
-    const taintFindings: { entry: string; sink: string; path: string[] }[] = [];
+    const taintFindings: { entry: string; sink: string; path: string[]; severity?: "high"; confidence?: "low" }[] = [];
 
     for (const entry of routeHandlers) {
       const queue: { func: string; path: string[] }[] = [{ func: entry, path: [entry] }];
@@ -267,7 +272,20 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
             // Also match dotted variants (e.g., "cursor.execute" for "execute")
             Array.from(DANGEROUS_SINKS).some(sink => calleeName.endsWith(`.${sink}`));
 
-          if (isSink) {
+          const isArgSensitiveSink = ARG_SENSITIVE_SINKS.has(calleeName) ||
+            Array.from(ARG_SENSITIVE_SINKS).some(sink => calleeName.endsWith(`.${sink}`));
+
+          if (isSink || isArgSensitiveSink) {
+            // For arg-sensitive sinks (open, Path), only flag when the call
+            // has arguments — bare references like `f = open` are not injection paths.
+            if (isArgSensitiveSink && !isSink) {
+              if (call.argCount === 0) {
+                // No arguments: this is a reference (e.g. callback, assignment),
+                // not a call with tainted data. Skip.
+                continue;
+              }
+            }
+
             // Check if any function in the taint path uses a sanitizer
             const pathUsesSanitizer = current.path.some(p => {
               const funcCalls = callAdjacency.get(p) ?? [];
@@ -278,10 +296,15 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
             });
 
             if (!pathUsesSanitizer) {
+              // Arg-sensitive sinks (open/Path) get degraded severity —
+              // we cannot prove the argument is tainted, only that the
+              // call chain reaches them.
+              const isArgOnly = isArgSensitiveSink && !isSink;
               taintFindings.push({
                 entry,
                 sink: calleeName,
                 path: [...current.path, `${call.file}:${call.line}`],
+                ...(isArgOnly ? { severity: "high" as const, confidence: "low" as const } : {}),
               });
             }
           }
@@ -328,8 +351,8 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
       findings.push({
         ruleId: "DK-PY-007",
         title: `Cross-function taint path: route handler → ${tf.sink} without sanitization`,
-        severity: "blocker",
-        confidence: "high",
+        severity: tf.severity ?? "blocker",
+        confidence: tf.confidence ?? "high",
         missingControls: ["crossFunctionTaintSanitization"],
         consequence: `User input from route handler "${tf.entry}" flows through function calls to dangerous sink "${tf.sink}" without passing through a sanitization function. This enables multi-step injection attacks where tainted data crosses function boundaries.`,
         acceptanceCriteria: [

@@ -1,9 +1,14 @@
 import type { AnalysisReport, Finding, Severity } from "./types.js";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-const require = createRequire(import.meta.url);
-const pkg = JSON.parse(readFileSync(require.resolve("../package.json"), "utf8"));
+const __here = path.dirname(fileURLToPath(import.meta.url));
+// Works for both src/sarif.ts (tests) and dist/src/sarif.js (CLI/npm)
+const pkgPath = ["../package.json", "../../package.json"]
+  .map(rel => path.resolve(__here, rel))
+  .find(p => { try { readFileSync(p); return true; } catch { return false; } });
+const pkg = JSON.parse(readFileSync(pkgPath!, "utf8"));
 
 function mapSeverity(severity: Severity): string {
   switch (severity) {
