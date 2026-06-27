@@ -32,7 +32,7 @@
 
 你的 AI 助手 30 分钟给你搭了个 app，本地跑得挺好。
 
-但能上线吗？
+但这东西真的能上线吗？很多项目——不管是 AI 写的还是人写的——可能 demo 了几个月甚至几年，都没人认真问过一句：这玩意到底能不能上生产？
 
 - API Key 硬编码在源码里
 - 任何接口都没有输入校验
@@ -245,7 +245,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>PyTorch, TensorFlow, Pandas, Scikit</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🤖-black?style=flat-square&logo=openai&logoColor=white" width="36" height="36"><br>
 <strong>Agent / MCP</strong><br>
 <sub>LLM agents, 工具调用, MCP 服务器</sub>
 </td>
@@ -255,7 +255,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>Kong, Express Gateway, http-proxy</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🌐-4285F4?style=flat-square&logo=googlechrome&logoColor=white" width="36" height="36"><br>
 <strong>浏览器扩展</strong><br>
 <sub>Chrome, Firefox, Manifest V3</sub>
 </td>
@@ -267,7 +267,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 </tr>
 <tr>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/githubactions/githubactions-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚙️-2088FF?style=flat-square&logo=githubactions&logoColor=white" width="36" height="36"><br>
 <strong>CI/CD</strong><br>
 <sub>GitHub Actions, GitLab CI, Jenkins</sub>
 </td>
@@ -277,7 +277,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>Knex, Prisma, TypeORM, Alembic</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/celery/celery-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⏰-5BB552?style=flat-square&logo=clock&logoColor=white" width="36" height="36"><br>
 <strong>定时任务</strong><br>
 <sub>node-cron, Celery, APScheduler</sub>
 </td>
@@ -341,7 +341,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>Stripe, PayPal, Square</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/passport/passport-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🔐-009688?style=flat-square&logo=lock&logoColor=white" width="36" height="36"><br>
 <strong>认证服务</strong><br>
 <sub>Passport, NextAuth, Clerk, Auth.js</sub>
 </td>

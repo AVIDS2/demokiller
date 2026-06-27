@@ -32,7 +32,7 @@
 
 Your AI assistant built an app in 30 minutes. It runs great locally.
 
-But is it production-ready?
+But is it really production-ready? Many projects — AI-assisted or not — live in "demo mode" for months or even years before someone seriously asks: can this actually ship?
 
 - API keys hardcoded in source code
 - No input validation on any endpoint
@@ -245,7 +245,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>PyTorch, TensorFlow, Pandas, Scikit</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/openai/openai-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🤖-black?style=flat-square&logo=openai&logoColor=white" width="36" height="36"><br>
 <strong>Agent / MCP</strong><br>
 <sub>LLM agents, tool calling, MCP servers</sub>
 </td>
@@ -255,7 +255,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>Kong, Express Gateway, http-proxy</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/chrome/chrome-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🌐-4285F4?style=flat-square&logo=googlechrome&logoColor=white" width="36" height="36"><br>
 <strong>Browser Ext</strong><br>
 <sub>Chrome, Firefox, Manifest V3</sub>
 </td>
@@ -267,7 +267,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 </tr>
 <tr>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/githubactions/githubactions-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚙️-2088FF?style=flat-square&logo=githubactions&logoColor=white" width="36" height="36"><br>
 <strong>CI/CD</strong><br>
 <sub>GitHub Actions, GitLab CI, Jenkins</sub>
 </td>
@@ -277,7 +277,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>Knex, Prisma, TypeORM, Alembic</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/celery/celery-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⏰-5BB552?style=flat-square&logo=clock&logoColor=white" width="36" height="36"><br>
 <strong>Cron Job</strong><br>
 <sub>node-cron, Celery, APScheduler</sub>
 </td>
@@ -341,7 +341,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>Stripe, PayPal, Square</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/passport/passport-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/🔐-009688?style=flat-square&logo=lock&logoColor=white" width="36" height="36"><br>
 <strong>Auth Service</strong><br>
 <sub>Passport, NextAuth, Clerk, Auth.js</sub>
 </td>
