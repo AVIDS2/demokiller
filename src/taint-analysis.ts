@@ -201,7 +201,7 @@ function findDirectTaintPaths(graph: CallGraph): TaintPath[] {
   return results;
 }
 
-function findCrossFunctionTaint(graph: CallGraph, maxDepth = 3): TaintPath[] {
+function findCrossFunctionTaint(graph: CallGraph, maxDepth = 1): TaintPath[] { // Currently only supports depth 1; multi-hop requires full call graph BFS
   const results: TaintPath[] = [];
   const seen = new Set<string>();
 

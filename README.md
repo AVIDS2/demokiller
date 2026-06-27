@@ -397,10 +397,10 @@ npm pack --dry-run
 
 ## Roadmap
 
-- Plugin 入口，让非 MCP / 非 Skill 的 agent 也能原生接入。
-- Python (Flask/FastAPI/Django) 检测器。
-- Go (Gin/Echo) 检测器。
+- Plugin 入口，让非 MCP / 非 Skill 的agent 也能原生接入。
 - 更多生产风险域和 benchmark 样本。
+- Java/C#/PHP/Ruby call graph 支持。
+- 系统化 false-positive 测量。
 
 ## License
 

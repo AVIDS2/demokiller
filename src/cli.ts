@@ -15,14 +15,8 @@ import { diffSnapshots } from "./state.js";
 import { toSarif } from "./sarif.js";
 import { loadBaseline, saveBaseline, diffFindings } from "./baseline.js";
 import { findSuppressionComments } from "./suppressions.js";
+import { SUPPORTED_STACKS } from "./shared-constants.js";
 import path from "node:path";
-
-const SUPPORTED_STACKS = [
-  "nextjs", "express", "fastify", "flask", "fastapi", "django",
-  "gin", "echo", "fiber", "actix", "axum", "rocket",
-  "spring-boot", "ktor", "laravel", "rails", "sinatra",
-  "aspnet", "vapor", "http4s", "akka",
-];
 import { pathToFileURL } from "node:url";
 import type { AnalysisReport, Finding } from "./types.js";
 import type { ResolvedRepository } from "./repository.js";
@@ -227,8 +221,7 @@ export async function runCli(
                 const reResult = await dependencies.analyzeFindings(reResolved.root);
                 const cfg = await loadConfig(reResolved.root);
                 const filtered = applyConfig(reResult.findings, cfg);
-                const stacks = ["nextjs", "express", "fastify", "flask", "fastapi", "django", "gin", "echo", "fiber", "actix", "axum", "rocket", "spring-boot", "ktor", "laravel", "rails", "sinatra", "aspnet", "vapor", "http4s", "akka"];
-                const hasEv = stacks.includes(reResult.inventory.stack) && reResult.inventory.apiRoutes.length > 0;
+                const hasEv = SUPPORTED_STACKS.includes(reResult.inventory.stack) && reResult.inventory.apiRoutes.length > 0;
                 const newReport = buildJsonReport(filtered, new Date().toISOString(), { hasSupportedProjectEvidence: hasEv });
                 const newBlockers = newReport.findings.filter(f => f.severity === "blocker").length;
 

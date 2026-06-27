@@ -6,19 +6,14 @@ import { resolveRepository } from "./repository.js";
 import { analyzeFindings } from "./rules/index.js";
 import { buildJsonReport } from "./report/json.js";
 import { renderMarkdownReport } from "./report/markdown.js";
+import { SUPPORTED_STACKS } from "./shared-constants.js";
 import type { AnalysisReport } from "./types.js";
 
 export async function runInspection(projectPath: string): Promise<AnalysisReport> {
   const resolved = await resolveRepository(projectPath);
   try {
     const { findings, inventory } = await analyzeFindings(resolved.root);
-    const supportedStacks = [
-      "nextjs", "express", "fastify", "flask", "fastapi", "django",
-      "gin", "echo", "fiber", "actix", "axum", "rocket",
-      "spring-boot", "ktor", "laravel", "rails", "sinatra",
-      "aspnet", "vapor", "http4s", "akka",
-    ];
-    const hasEvidence = supportedStacks.includes(inventory.stack) && inventory.apiRoutes.length > 0;
+    const hasEvidence = SUPPORTED_STACKS.includes(inventory.stack) && inventory.apiRoutes.length > 0;
     return buildJsonReport(findings, new Date().toISOString(), {
       hasSupportedProjectEvidence: hasEvidence,
     });
@@ -81,7 +76,7 @@ export async function handleGenerateHardeningPlan(projectPath: string): Promise<
 export function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "demokiller",
-    version: "0.5.1",
+    version: "0.5.6",
   });
 
   server.tool(

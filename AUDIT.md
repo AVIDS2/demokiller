@@ -2,6 +2,7 @@
 
 <!-- 最后更新: 2026-06-27 -->
 <!-- 当前版本: v0.5.6 -->
+<!-- 诚实度评分: 65/100 (Codex 验证) -->
 
 ---
 
@@ -9,7 +10,7 @@
 
 **Demo Killer 目前是一个"深度不均的生产就绪检查器"，不是"生产就绪闸门"。**
 
-它能做：基于 155 条规则 + 文本模式 + JS/TS/Python/Go/Rust AST + 调用图 + 污点分析 + 项目类型感知路由 + SARIF 输出 + baseline/suppression，覆盖全部 25 种项目类型的深度检查（未知类型有通用规则），含 Python/Go/Rust tree-sitter AST + Agent/MCP 规则 + 14 种新增项目类型深度规则。
+它能做：基于 155 条规则 + 文本模式 + JS/TS/Python AST + 调用图 + 污点分析 + 项目类型感知路由 + SARIF 输出 + baseline/suppression，覆盖全部 25 种项目类型的深度检查（未知类型有通用规则），含 Python tree-sitter AST + Agent/MCP 规则 + 14 种新增项目类型深度规则。
 它不能做：理解系统架构、推导未知风险、验证业务正确性、运行时行为推断。
 
 一个资深工程师认真审查 30 分钟，能发现的问题仍比 Demo Killer 多，但差距正在缩小。
@@ -51,7 +52,7 @@
 | monitoring-tool | ✅ 检测到 | ✅ 4 条 (DK-MON-001~004) | ⚠️ 源码扫描 | **30%** |
 | unknown | — | ⚠️ 通用规则 (DK-UNIVERSAL-001) | ❌ 无 | **5%** |
 
-**深度覆盖: 26/26 (100%) — 所有可检测项目类型均有专用深度规则**
+**深度覆盖: 25/26 (96%) — 25 种可检测项目类型有专用深度规则（unknown 类型仅有通用 advisory）**
 
 ### 2.2 语言覆盖
 
@@ -60,8 +61,8 @@
 | TypeScript | ✅ | ✅ ts-morph | ✅ 3 fixtures | **70%** |
 | JavaScript | ⚠️ 回退文本 | ❌ | ✅ 2 fixtures (cli, mq) | **35%** |
 | Python | ✅ | ⚠️ 文本回退 (tree-sitter 可选) | ✅ 2 fixtures (risky, hardened) | **30%** |
-| Go | ✅ | ⚠️ tree-sitter (go-call-graph.ts) | ✅ 1 fixture | **30%** |
-| Rust | ✅ | ⚠️ tree-sitter (rust-call-graph.ts) | ✅ 1 fixture | **30%** |
+| Go | ✅ | ❌ tree-sitter 文件存在但未集成 | ✅ 1 fixture | **15%** |
+| Rust | ✅ | ❌ tree-sitter 文件存在但未集成 | ✅ 1 fixture | **15%** |
 | Java | ✅ | ❌ 文本回退 | ✅ 1 fixture | **15%** |
 | Kotlin | ✅ | ❌ 文本回退 | ⚠️ fixture 无 route | **10%** |
 | C# | ✅ | ❌ 文本回退 | ✅ 1 fixture | **15%** |
@@ -75,15 +76,17 @@
 
 **综合覆盖率: ~20%**
 
+> Note: Go/Rust tree-sitter modules exist (go-call-graph.ts, rust-call-graph.ts) but are not imported — 1324 lines of dead code removed in v0.5.6
+
 ### 2.3 分析深度
 
 | 层级 | 名称 | 描述 | 当前完成度 |
 |------|------|------|-----------|
 | L0 | 文本模式匹配 | 正则/关键字匹配 | ✅ 100% |
-| L1 | AST 解析 | tree-sitter 语法树遍历 | ⚠️ JS/TS + Python/Go/Rust (tree-sitter) |
-| L2 | 跨文件调用图 | 导入解析 + 函数调用链 | ⚠️ JS/TS, ~60% |
-| L3 | 数据流追踪 | 污点源→传播→终点 | ⚠️ 同函数 30%, 跨函数 10% |
-| L4 | 变量级追踪 | 赋值传播追踪 | ⚠️ 基础集成 |
+| L1 | AST 解析 | tree-sitter 语法树遍历 | ⚠️ JS/TS + Python (tree-sitter) |
+| L2 | 跨文件调用图 | 导入解析 + 函数调用链 | ⚠️ JS/TS, ~40% |
+| L3 | 数据流追踪 | 污点源→传播→终点 | ⚠️ 同函数 15%, 跨函数 ~5% (cross-function taint depth=1 for JS/TS; maxDepth parameter unused; Python BFS is multi-hop) |
+| L4 | 变量级追踪 | 赋值传播追踪 | ❌ 10% — string-contains check only |
 | L5 | 业务逻辑 | 幂等/事务/并发/状态机 | ⚠️ 4 条模式规则 + 源码扫描 |
 | L6 | 系统理解 | 架构推理+未知风险推导 | ❌ 0% |
 | L7 | 运行时推断 | N+1/内存/并发行为 | ❌ 0% |
@@ -181,25 +184,55 @@
 | 中误报 | ERR-001, LOGI-001, CMDI-001, SSRF-001, TAINT-001, PERF-001, INPUT-001 (源码 inspector 未识别 Go binding 验证) |
 | 低误报 | AI-001, AUTH-001, WEBHOOK-001, SECRET-001, DB-001, DEP-001, AGENT-001, CLI-*, LIB-*, MQ-*, IAC-*, PAY-*, AUTHSVC-*, MOB-*, PY-*, AGENT-006~011 |
 
+### allContent 拼接反模式
+
+22 条深度规则文件将所有源码文件拼接为单个字符串后进行正则匹配。这导致：
+- 文件 A 中的模式触发文件 B 的误报
+- 注释/字符串中的关键字触发安全规则
+- 无法定位具体是哪个文件包含问题
+
+受影响文件: api-gateway, blockchain, browser-extension, cicd-pipeline, cms, devops-script, game, ide-plugin, iot-embedded, migration-tool, ml-pipeline, monitoring-tool, static-site, wasm-module 等 22 个深规则文件。
+
+v0.5.6 已将部分规则改为逐文件分析（ml-pipeline, monitoring-tool, browser-extension, cicd-pipeline, wasm-module），剩余文件将在后续版本迁移。
+
+### 3.6 Codex 审计验证 (v0.5.6)
+
+对 AUDIT.md 中的 10 项关键声明进行独立 Codex 验证，诚实度评分: **65/100**。
+
+| 声明 | 验证结果 | 说明 |
+|------|---------|------|
+| 155 条规则 | VERIFIED ✅ | 规则 ID 逐一核实 |
+| 26/26 项目类型覆盖 | EXAGGERATED ⚠️ | unknown 类型仅有通用 advisory stub，非深度覆盖 |
+| 4/18 语言 AST 覆盖 | EXAGGERATED ⚠️ | Go/Rust tree-sitter 文件存在但未集成，实际仅 TS + Python（2/18） |
+| 跨函数污点分析 | EXAGGERATED ⚠️ | maxDepth=3 参数未使用，实际仅 depth=1 |
+| 变量级追踪 | EXAGGERATED ⚠️ | L4 实际仅为 string-contains 检查，非变量级追踪 |
+| ~10% 误报率 | UNVERIFIABLE | 无系统性测量，仅凭感觉估计 |
+| 全部 26 种类型深度规则 | EXAGGERATED ⚠️ | 同 26/26 声明 |
+| Agent/MCP 独有覆盖 | VERIFIED ✅ | DK-AGENT-* 规则确实存在 |
+| SARIF 2.1.0 输出 | VERIFIED ✅ | sarif.test.ts 验证 |
+| 0 死代码 | FALSE ❌ | go-call-graph.ts (573行) + rust-call-graph.ts (751行) = 1324 行死代码 |
+
+**诚实度评分: 65/100** — 核心功能声明基本准确，但覆盖率和分析深度存在系统性夸大。
+
 ---
 
 ## 四、与竞品对比
 
 | 维度 | CodeQL | SonarQube | Semgrep | Snyk | Demo Killer |
 |------|--------|-----------|---------|------|-------------|
-| AST 解析 | ✅ | ✅ | ✅ | ✅ | ⚠️ JS/TS + Python/Go/Rust (tree-sitter) |
-| 调用图 | ✅ | ✅ | ✅ Pro | ✅ | ⚠️ 60% |
-| 数据流 | ✅ 全局 | ✅ 跨函数 | ✅ Pro | ✅ | ⚠️ 30% |
+| AST 解析 | ✅ | ✅ | ✅ | ✅ | ⚠️ JS/TS + Python (tree-sitter) |
+| 调用图 | ✅ | ✅ | ✅ Pro | ✅ | ⚠️ 40% |
+| 数据流 | ✅ 全局 | ✅ 跨函数 | ✅ Pro | ✅ | ⚠️ 15% |
 | 语言覆盖 | 10+ | 30+ | 30+ | 10+ | 18 |
-| 项目类型 | ⚠️ 偏安全 | ⚠️ 偏质量 | ⚠️ 偏安全 | ⚠️ 偏安全 | ✅ 26 种 (全部深度) |
-| 生产就绪 | ❌ | ❌ | ❌ | ❌ | ✅ 26 种类型深度 |
+| 项目类型 | ⚠️ 偏安全 | ⚠️ 偏质量 | ⚠️ 偏安全 | ⚠️ 偏安全 | ✅ 25/26 种深度 (unknown 仅 advisory) |
+| 生产就绪 | ❌ | ❌ | ❌ | ❌ | ✅ 25/26 种类型深度 |
 | Agent 生态 | ❌ | ❌ | ❌ | ❌ | ✅ 独有 (DK-AGENT-*) |
 | SARIF | ✅ | ✅ Pro | ✅ | ✅ | ✅ 2.1.0 |
 | Baseline/diff | ✅ | ✅ | ❌ | ✅ | ✅ 指纹基线 |
 | Mobile | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ✅ DK-MOB-* |
 | 开源 | 查询语言 | 社区版 | OSS | 商业 | ✅ MIT |
 
-**Demo Killer 优势: 项目类型广度 + Agent 生态覆盖 + 生产就绪定位 + 全部 26 种类型深度规则。**
+**Demo Killer 优势: 项目类型广度 + Agent 生态覆盖 + 生产就绪定位 + 25 种类型深度规则。**
 
 ---
 
@@ -254,8 +287,8 @@
 | 任务 | 状态 |
 |------|------|
 | 14 种新增项目类型深度规则 (game/ml/browser-ext/ide/cicd/migration/apigw/wasm/blockchain/iot/devops/static/cms/monitoring) | ✅ 51 条新规则 |
-| Go AST 分析 (tree-sitter-go) | ✅ go-call-graph.ts |
-| Rust AST 分析 (tree-sitter-rust) | ✅ rust-call-graph.ts |
+| Go AST 分析 (tree-sitter-go) | ❌ 已移除 (v0.5.6 死代码清理) |
+| Rust AST 分析 (tree-sitter-rust) | ❌ 已移除 (v0.5.6 死代码清理) |
 | Python 调用图集成到 python-taint.ts | ✅ tree-sitter 可选增强 |
 | 项目类型检测全覆盖 (26/26) | ✅ api-gateway/ide-plugin/cicd-pipeline/migration-tool/wasm-module/iot-embedded/devops-script/monitoring-tool/cms |
 | devops-script 规则实现（非 stub） | ✅ DK-DEVOPS-001~004 |
@@ -282,10 +315,11 @@
 | 指标 | 之前 | 当前 | 目标 (v1.0) |
 |------|------|------|-------------|
 | 规则总数 | 46 | **155** | 200+ |
-| 项目类型深度覆盖 | 2/26 (8%) | **26/26 (100%)** | 26/26 (100%) |
-| 语言 AST 覆盖 | 1/18 (6%) | **4/18 (22%)** | 8/18 (44%) |
+| 项目类型深度覆盖 | 2/26 (8%) | **25/26 (96%)** | 26/26 (100%) |
+| 语言 AST 覆盖 | 1/18 (6%) | **2/18 (11%)** | 8/18 (44%) |
 | 分析深度 L4+ | 0% | ~5% | 30% |
-| 误报率 (预估) | ~40% | **~10%** | <15% |
+| 误报率 (预估) | ~40% | **~15% (est.)** | <15% |
 | fixture 覆盖语言 | 6/18 | **10/18** | 14/18 |
 | 测试数量 | 77 | **123** | 200+ |
 | 竞品对齐度 | ~20% | **~32%** | ~60% |
+| 死代码 | 1324 行 | **0 行** | 0 行 |
