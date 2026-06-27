@@ -12,6 +12,9 @@ import { renderColoredReport } from "./report/colored.js";
 import { renderHtmlReport } from "./report/html.js";
 import { resolveRepository } from "./repository.js";
 import { diffSnapshots } from "./state.js";
+import { toSarif } from "./sarif.js";
+import { loadBaseline, saveBaseline, diffFindings } from "./baseline.js";
+import { findSuppressionComments } from "./suppressions.js";
 import path from "node:path";
 
 const SUPPORTED_STACKS = [
@@ -77,6 +80,16 @@ export async function runCli(
   const command = argv[0];
   const input = argv[1] && !argv[1].startsWith("--") ? argv[1] : process.cwd();
   const wantsJson = argv.includes("--json");
+  const formatFlag = argv.find(a => a.startsWith("--format="))?.split("=")[1]
+    || (argv.includes("--format") ? argv[argv.indexOf("--format") + 1] : undefined)
+    || (wantsJson ? "json" : undefined);
+  const baselineIdx = argv.indexOf("--baseline");
+  const baselinePath = baselineIdx >= 0 && argv[baselineIdx + 1] ? argv[baselineIdx + 1] : undefined;
+  const wantsSaveBaseline = argv.includes("--save-baseline");
+  const severityIdx = argv.indexOf("--severity");
+  const minSeverity = severityIdx >= 0 && argv[severityIdx + 1] ? argv[severityIdx + 1] : undefined;
+
+  const SEVERITY_ORDER = ["advisory", "low", "medium", "high", "blocker"];
 
   if (!command || command === "--help" || command === "-h") {
     return {
@@ -248,7 +261,62 @@ export async function runCli(
 
       const wantsMarkdown = argv.includes("--markdown");
       const wantsHtml = argv.includes("--html");
-      const stdout = wantsJson ? JSON.stringify(report, null, 2) : wantsHtml ? renderHtmlReport(report) : wantsMarkdown ? renderMarkdownReport(report) : renderColoredReport(report);
+
+      // Severity filtering
+      let outputFindings = report.findings;
+      if (minSeverity) {
+        const minIdx = SEVERITY_ORDER.indexOf(minSeverity);
+        if (minIdx >= 0) {
+          outputFindings = outputFindings.filter(f => SEVERITY_ORDER.indexOf(f.severity) >= minIdx);
+        }
+      }
+
+      // Baseline diff
+      if (baselinePath) {
+        try {
+          const baseline = await loadBaseline(baselinePath);
+          const diff = diffFindings(outputFindings, baseline);
+          outputFindings = diff.newFindings;
+          // Report fixed findings
+          if (diff.fixedFindings.length > 0) {
+            process.stdout.write(`\x1b[32m  ${diff.fixedFindings.length} findings resolved since baseline\x1b[0m\n`);
+          }
+          if (diff.existingFindings.length > 0) {
+            process.stdout.write(`\x1b[2m  ${diff.existingFindings.length} findings suppressed (in baseline)\x1b[0m\n`);
+          }
+        } catch { /* no baseline file — treat all as new */ }
+      }
+
+      // Inline suppression
+      const { promises: fsProm } = await import("node:fs");
+      outputFindings = (await Promise.all(outputFindings.map(async (f) => {
+        const loc = f.evidence?.[0]?.location?.path;
+        if (!loc) return f;
+        try {
+          const fullPath = path.join(resolved.root, loc);
+          const content = await fsProm.readFile(fullPath, "utf8");
+          if (findSuppressionComments(content, f.ruleId)) return null;
+        } catch {}
+        return f;
+      }))).filter((f): f is Finding => f !== null);
+
+      const reportFiltered = { ...report, findings: outputFindings };
+
+      // Save baseline
+      if (wantsSaveBaseline) {
+        await saveBaseline(report.findings, ".demokiller/baseline.json");
+        process.stdout.write("\x1b[32m  Baseline saved to .demokiller/baseline.json\x1b[0m\n");
+      }
+
+      const stdout = formatFlag === "sarif"
+        ? JSON.stringify(toSarif(reportFiltered), null, 2)
+        : wantsJson
+          ? JSON.stringify(reportFiltered, null, 2)
+          : wantsHtml
+            ? renderHtmlReport(reportFiltered)
+            : wantsMarkdown
+              ? renderMarkdownReport(reportFiltered)
+              : renderColoredReport(reportFiltered);
       await resolved.cleanup?.();
       return { exitCode: 0, stdout, stderr: "" };
     } catch (error) {

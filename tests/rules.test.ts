@@ -166,4 +166,23 @@ describe("analyzeFindings", () => {
     expect(ruleIds).not.toContain("DK-CSP-001");
     expect(ruleIds).not.toContain("DK-HTTPS-001");
   });
+
+  it("python risky fixture gets Python deep rules", async () => {
+    const { findings } = await analyzeFindings("fixtures/python-risky");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-PY-"))).toBe(true);
+  });
+
+  it("mobile app fixture gets mobile deep rules", async () => {
+    const { findings, inventory } = await analyzeFindings("fixtures/mobile-risky");
+    expect(inventory.projectKind).toBe("mobile-app");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-MOB-"))).toBe(true);
+  });
+
+  it("agent/MCP fixture gets agent deep rules", async () => {
+    const { findings } = await analyzeFindings("fixtures/agent-risky");
+    const ruleIds = findings.map(f => f.ruleId);
+    expect(ruleIds.some(id => id.startsWith("DK-AGENT-"))).toBe(true);
+  });
 });

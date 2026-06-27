@@ -450,7 +450,7 @@ export async function buildInventory(root: string): Promise<ProjectInventory> {
   const isNpmPackage = !!(packageJson.name && packageJson.private !== true);
   const npmFilesField = Array.isArray(packageJson.files);
   const allDeps = { ...(packageJson.dependencies ?? {}), ...(packageJson.devDependencies ?? {}) };
-  const projectKind = detected.stack === "unknown" ? detectProjectKind(allDeps, files) : "web-app";
+  const projectKind = detectProjectKind(allDeps, files);
 
   return {
     root,

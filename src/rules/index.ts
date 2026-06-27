@@ -54,6 +54,9 @@ import { paymentSystemFindings, authServiceFindings } from "./payment-auth.js";
 import { cronJobFindings } from "./cron-job.js";
 import { serverlessFuncFindings } from "./serverless-func.js";
 import { desktopAppFindings } from "./desktop-app.js";
+import { mobileAppFindings } from "./mobile-app.js";
+import { agentMcpFindings } from "./agent-mcp.js";
+import { pythonFindings } from "./python-taint.js";
 import { tsStrictRule } from "./ts-strict.js";
 import { projectTypeFindings } from "./universal-project.js";
 
@@ -141,6 +144,9 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...(await cronJobFindings(root, inventory)),
     ...(await serverlessFuncFindings(root, inventory)),
     ...(await desktopAppFindings(root, inventory)),
+    ...(await mobileAppFindings(root, inventory)),
+    ...(await agentMcpFindings(root, inventory)),
+    ...(await pythonFindings(root, inventory)),
     ...projectTypeFindings(inventory),
     ...(await gracefulShutdownRule(inventory)),
     ...(await healthCheckRule(inventory)),
