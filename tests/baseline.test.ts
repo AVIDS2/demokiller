@@ -1,4 +1,4 @@
-import { describe, expect, it, tmpDir } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   loadBaseline,
   saveBaseline,
@@ -14,9 +14,17 @@ function makeFinding(ruleId: string, title: string, filePath = "src/app.ts"): Fi
   return {
     ruleId,
     severity: "high",
+    confidence: "high",
     title,
-    description: "test",
-    evidence: [{ message: "test", location: { path: filePath, startLine: 1 } }],
+    consequence: "test consequence",
+    acceptanceCriteria: ["test criterion"],
+    evidence: [{
+      id: "test-0",
+      detector: "test",
+      location: { path: filePath, line: 1 },
+      controls: [],
+      signals: [],
+    }],
     missingControls: [],
     entryPoint: "test",
   };
@@ -65,8 +73,8 @@ describe("baseline", () => {
 
   it("diffFindings identifies new, existing, and fixed findings", () => {
     const baseline = [
-      { fingerprint: buildFingerprint("DK-AI-001", "src/app.ts", "finding A"), ruleId: "DK-AI-001" },
-      { fingerprint: buildFingerprint("DK-AUTH-001", "src/app.ts", "finding B"), ruleId: "DK-AUTH-001" },
+      { fingerprint: buildFingerprint("DK-AI-001", "src/app.ts", "finding A"), ruleId: "DK-AI-001", path: "src/app.ts" },
+      { fingerprint: buildFingerprint("DK-AUTH-001", "src/app.ts", "finding B"), ruleId: "DK-AUTH-001", path: "src/app.ts" },
     ];
     const current = [
       makeFinding("DK-AI-001", "finding A"),       // exists in baseline
