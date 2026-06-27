@@ -30,9 +30,9 @@
 
 ## 问题
 
-你的 AI 助手 30 分钟给你搭了个 app，本地跑得挺好。
+你花了三个月打磨项目，用 AI 工具加速开发，功能测试都过了，准备上线。
 
-但这东西真的能上线吗？很多项目——不管是 AI 写的还是人写的——可能 demo 了几个月甚至几年，都没人认真问过一句：这玩意到底能不能上生产？
+但你心里清楚：生产环境比 demo 严酷得多。
 
 - API Key 硬编码在源码里
 - 任何接口都没有输入校验
@@ -282,7 +282,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>node-cron, Celery, APScheduler</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚡-FF9900?style=flat-square&logo=amazon&logoColor=white" width="36" height="36"><br>
 <strong>Serverless</strong><br>
 <sub>AWS Lambda, Vercel, Cloudflare</sub>
 </td>
@@ -299,7 +299,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 </tr>
 <tr>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/webassembly/webassembly-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚙️-654FF0?style=flat-square&logo=webassembly&logoColor=white" width="36" height="36"><br>
 <strong>WASM</strong><br>
 <sub>wasm-pack, AssemblyScript</sub>
 </td>
@@ -324,7 +324,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>Astro, Hugo, Gatsby, Eleventy</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/strapi/strapi-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/📝-4F5D6E?style=flat-square&logo=codeship&logoColor=white" width="36" height="36"><br>
 <strong>CMS</strong><br>
 <sub>Strapi, Directus, Keystone, Payload</sub>
 </td>
@@ -336,7 +336,7 @@ Demo Killer 检测 **26 种项目类型**，每种都有专属深度规则。
 <sub>Prometheus, Grafana, StatsD, Datadog</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/stripe/stripe-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/💳-635BFF?style=flat-square&logo=stripe&logoColor=white" width="36" height="36"><br>
 <strong>支付系统</strong><br>
 <sub>Stripe, PayPal, Square</sub>
 </td>

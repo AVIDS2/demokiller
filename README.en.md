@@ -30,9 +30,9 @@
 
 ## The Problem
 
-Your AI assistant built an app in 30 minutes. It runs great locally.
+You've spent months building your project. AI tools helped you move fast. Features work. Tests pass. You're ready to deploy.
 
-But is it really production-ready? Many projects — AI-assisted or not — live in "demo mode" for months or even years before someone seriously asks: can this actually ship?
+But you know: production is unforgiving.
 
 - API keys hardcoded in source code
 - No input validation on any endpoint
@@ -282,7 +282,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>node-cron, Celery, APScheduler</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚡-FF9900?style=flat-square&logo=amazon&logoColor=white" width="36" height="36"><br>
 <strong>Serverless</strong><br>
 <sub>AWS Lambda, Vercel, Cloudflare</sub>
 </td>
@@ -299,7 +299,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 </tr>
 <tr>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/webassembly/webassembly-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/⚙️-654FF0?style=flat-square&logo=webassembly&logoColor=white" width="36" height="36"><br>
 <strong>WASM</strong><br>
 <sub>wasm-pack, AssemblyScript</sub>
 </td>
@@ -324,7 +324,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>Astro, Hugo, Gatsby, Eleventy</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/strapi/strapi-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/📝-4F5D6E?style=flat-square&logo=codeship&logoColor=white" width="36" height="36"><br>
 <strong>CMS</strong><br>
 <sub>Strapi, Directus, Keystone, Payload</sub>
 </td>
@@ -336,7 +336,7 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 <sub>Prometheus, Grafana, StatsD, Datadog</sub>
 </td>
 <td align="center" width="12.5%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/stripe/stripe-original.svg" width="36" height="36"><br>
+<img src="https://img.shields.io/badge/💳-635BFF?style=flat-square&logo=stripe&logoColor=white" width="36" height="36"><br>
 <strong>Payment</strong><br>
 <sub>Stripe, PayPal, Square</sub>
 </td>
