@@ -71,6 +71,7 @@ import { devopsScriptFindings } from "./devops-script.js";
 import { staticSiteFindings } from "./static-site.js";
 import { cmsFindings } from "./cms.js";
 import { monitoringToolFindings } from "./monitoring-tool.js";
+import { systemsCFindings } from "./systems-c.js";
 import { tsStrictRule } from "./ts-strict.js";
 import { projectTypeFindings } from "./universal-project.js";
 
@@ -175,6 +176,7 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...(await staticSiteFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await cmsFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await monitoringToolFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await systemsCFindings(root, inventory).catch(() => [] as Finding[])),
     ...(function () { try { return projectTypeFindings(inventory); } catch { return []; } })(),
     ...(await gracefulShutdownRule(inventory).catch(() => [] as Finding[])),
     ...(await healthCheckRule(inventory).catch(() => [] as Finding[])),
