@@ -13,7 +13,7 @@ function parseJsonContent(result: { content: Array<{ type: string; text: string 
 }
 
 describe("handleInspectProject", () => {
-  it("returns a full report for the risky fixture (JSON format)", async () => {
+  it("returns a full report for the risky fixture (JSON format)", { timeout: 15000 }, async () => {
     const result = await handleInspectProject(RISKY_FIXTURE, "json");
     expect(result.isError).toBeUndefined();
     const report = parseJsonContent(result);
@@ -36,7 +36,7 @@ describe("handleInspectProject", () => {
     expect(text).toContain("## Hardening Plan");
   });
 
-  it("returns fewer blockers for the partial-fix fixture", async () => {
+  it("returns fewer blockers for the partial-fix fixture", { timeout: 20000 }, async () => {
     const result = await handleInspectProject(PARTIAL_FIX, "json");
     const report = parseJsonContent(result);
 

@@ -8,7 +8,7 @@ async function readFileContent(root: string, file: string): Promise<string> {
 }
 
 async function walkFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor", ".terraform"]);
+  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor", ".terraform", "fixtures", "testdata", "samples", ".worktrees", ".demokiller", ".claude"]);
   const results: string[] = [];
   async function walk(dir: string) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -71,9 +71,11 @@ export async function iacFindings(root: string, inventory: ProjectInventory): Pr
   }
 
   // DK-IAC-002: State file not encrypted or not in remote backend
-  const hasRemoteState =
-    /backend\s*["']?(s3|gcs|azurerm|consul|pg|remote)/.test(allIacContent) ||
-    /terraform\s*{\s*\n\s*backend/.test(allIacContent);
+  // Only fire when actual Terraform files exist — prevents false positives on non-Terraform projects
+  if (tfFiles.length > 0) {
+    const hasRemoteState =
+      /backend\s*["']?(s3|gcs|azurerm|consul|pg|remote)/.test(allIacContent) ||
+      /terraform\s*{\s*\n\s*backend/.test(allIacContent);
 
   const hasStateEncryption =
     /encrypt\s*=\s*true/i.test(allIacContent) ||
@@ -111,6 +113,7 @@ export async function iacFindings(root: string, inventory: ProjectInventory): Pr
       evidence: [{ id: "iac-scan", detector: "project-scan", location: { path: "." }, controls: [], signals: ["remote state found but no encryption flag"] }],
     });
   }
+  } // end tfFiles.length > 0
 
   // DK-IAC-004: Overly permissive IAM policies
   const hasOverlyPermissive =

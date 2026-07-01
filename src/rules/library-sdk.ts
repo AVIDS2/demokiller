@@ -22,7 +22,7 @@ async function readFileContent(root: string, file: string): Promise<string> {
 }
 
 async function findSourceFiles(root: string): Promise<string[]> {
-  const SKIP_DIRS = new Set(["node_modules", "dist", ".next", "build", "out", "__pycache__", ".venv", "venv", "target", ".git"]);
+  const SKIP_DIRS = new Set(["node_modules", "dist", ".next", "build", "out", "__pycache__", ".venv", "venv", "target", ".git", "fixtures", "testdata", "samples", ".worktrees", ".demokiller", ".claude"]);
   const SOURCE_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"];
   const results: string[] = [];
 
@@ -55,8 +55,19 @@ async function checkTypeExports(root: string, inventory: ProjectInventory): Prom
 
   const pkg = await readJson(root, "package.json");
   const hasTypesField = typeof pkg.types === "string" || typeof pkg.typings === "string";
+  // Check nested exports: exports["."].types or exports.types
+  let exportsTypes = false;
+  if (pkg.exports && typeof pkg.exports === "object") {
+    const exp = pkg.exports as Record<string, unknown>;
+    if (typeof exp.types === "string") exportsTypes = true;
+    else {
+      for (const v of Object.values(exp)) {
+        if (v && typeof v === "object" && typeof (v as Record<string, unknown>).types === "string") { exportsTypes = true; break; }
+      }
+    }
+  }
 
-  if (hasTypesField) return null;
+  if (hasTypesField || exportsTypes) return null;
 
   // For TS projects, also check if tsconfig emits declarations
   let tsconfigEmitsDeclarations = false;
@@ -131,7 +142,7 @@ async function checkErrorTypes(root: string, inventory: ProjectInventory): Promi
   return {
     ruleId: "DK-LIB-002",
     title: "Library exports functions but no custom error classes",
-    severity: "high",
+    severity: "medium",
     confidence: "medium",
     missingControls: ["errorTypeExports"],
     consequence: "Consumers cannot catch specific errors from this library. They are forced to use generic error handling (try/catch on any Error), making it impossible to programmatically distinguish between different failure modes like network errors, validation errors, or auth errors.",

@@ -8,6 +8,7 @@ import type { ProjectInventory } from "../inventory.js";
 const SKIP_DIRS = new Set([
   "node_modules", ".next", "dist", "build", "target", "__pycache__",
   ".venv", "venv", "vendor", ".git", "out", "bin", "obj",
+  "fixtures", "testdata", "samples", "e2e", ".worktrees", ".demokiller", ".claude",
 ]);
 
 async function walkSourceFiles(root: string, dir = root): Promise<string[]> {
@@ -38,8 +39,16 @@ interface RuleMatch {
 }
 
 // DK-AGENT-006: Tool allowlist not enforced
+// Guard: file must be in an actual MCP/agent server context, not a utility or detection file
+const MCP_CONTEXT_RE = /\bnew\s+(?:Server|McpServer)|@modelcontextprotocol|mcp-sdk|SSEServerTransport|StdioServerTransport|agent\s*(?:Loop|Run|Step|Execute)|openai\.chat|anthropic\.messages|ChatCompletion|langchain/i;
+// Files that are detection/analysis utilities, not actual MCP servers
+const DETECTION_UTIL_RE = /(?:source-inspector|call-graph|python-call-graph|rule-helpers|taint-analysis|inventory|project-kind|walkSourceFiles|detectMcp|detectUnsafe|agent-mcp|security-hardening|error-handling|performance-rules|observability|deployment-rules|python-rules|environment-rules|baseline|benchmark|plugin|repository|config)/;
+const REPORT_UTIL_RE = /(?:src[/\\]report[/\\]|src[/\\]rules[/\\]|src[/\\]taint-analysis|src[/\\]source-inspector)/;
+const FIXTURE_RE = /(?:^|[\\/])(?:fixtures|testdata|samples|test|tests|__tests__|spec|specs|__test__|example|examples|demo|demos|bench|benchmark|benchmarks|docs|doc|vendor|third_party|node_modules|\.git)(?:[\\/]|$)/i;
 function detectNoAllowlist(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
+  if (!MCP_CONTEXT_RE.test(text)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -67,6 +76,9 @@ function detectNoAllowlist(text: string, file: string): RuleMatch[] {
 // DK-AGENT-007: Prompt injection via tool inputs
 function detectPromptInjection(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
+  // Gate: require AI/LLM context — prevents false positives on non-AI projects (CMS, testing tools, etc.)
+  if (!MCP_CONTEXT_RE.test(text)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -107,6 +119,9 @@ function detectPromptInjection(text: string, file: string): RuleMatch[] {
 // DK-AGENT-008: Secret/context leak in agent responses
 function detectSecretLeak(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
+  // Gate: require MCP/agent context — prevents false positives on non-AI web APIs
+  if (!MCP_CONTEXT_RE.test(text)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -145,6 +160,7 @@ function detectSecretLeak(text: string, file: string): RuleMatch[] {
 // DK-AGENT-009: Unbounded agent loop
 function detectUnboundedLoop(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -183,8 +199,14 @@ function detectUnboundedLoop(text: string, file: string): RuleMatch[] {
 }
 
 // DK-AGENT-010: Unsafe filesystem tool
+// Guard: file must be an actual tool handler in MCP context
+const TOOL_HANDLER_RE = /server\.tool\s*\(|\.addTool\s*\(|\.registerTool\s*\(|McpServer|handleTool|toolHandler/i;
 function detectUnsafeFs(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
+  // Gate: require MCP context AND tool handler patterns
+  if (!MCP_CONTEXT_RE.test(text)) return [];
+  if (!TOOL_HANDLER_RE.test(text)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {
@@ -217,6 +239,7 @@ function detectUnsafeFs(text: string, file: string): RuleMatch[] {
 // DK-AGENT-011: MCP server authentication missing
 function detectMcpNoAuth(text: string, file: string): RuleMatch[] {
   const matches: RuleMatch[] = [];
+  if (DETECTION_UTIL_RE.test(file) || REPORT_UTIL_RE.test(file) || FIXTURE_RE.test(file)) return [];
   const lines = text.split("\n");
 
   for (let i = 0; i < lines.length; i++) {

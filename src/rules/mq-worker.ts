@@ -8,7 +8,7 @@ async function readFileContent(root: string, file: string): Promise<string> {
 }
 
 async function walkSourceFiles(root: string, exts: string[]): Promise<string[]> {
-  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor"]);
+  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor", "fixtures", "testdata", "samples", ".worktrees", ".demokiller", ".claude"]);
   const results: string[] = [];
   async function walk(dir: string) {
     const entries = await fs.readdir(dir, { withFileTypes: true });

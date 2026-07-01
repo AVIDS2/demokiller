@@ -8,7 +8,12 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
   const pyFiles = await walkSourceFiles(root, [".py"]);
   if (pyFiles.length === 0) return [];
 
-  const allContent = (await Promise.all(pyFiles.map(f => readFileContent(root, f)))).join("\n");
+  // Filter out test/fixture/example/vendor files for pattern matching
+  const SKIP_RE = /(?:^|[\\/])(?:test|tests|__tests__|spec|specs|fixtures|testdata|samples|example|examples|demo|demos|bench|benchmark|benchmarks|docs|doc|vendor|third_party|node_modules|\.git)(?:[\\/]|$)|[._](?:test|spec|e2e)\.[^.]+$/i;
+  const isTestOrFixture = (f: string) => SKIP_RE.test(f);
+
+  const prodPyFiles = pyFiles.filter(f => !isTestOrFixture(f));
+  const allContent = (await Promise.all(prodPyFiles.map(f => readFileContent(root, f)))).join("\n");
 
   // DK-PY-001: SQL injection via f-string/format in query execution
   const hasSQLInjection =
@@ -195,7 +200,16 @@ export async function pythonFindings(root: string, inventory: ProjectInventory):
   // DK-PY-007: Cross-function taint path analysis via call graph
   try {
     const { buildPythonCallGraph } = await import("../python-call-graph.js");
-    const callGraph: PythonCallGraph = await buildPythonCallGraph(root);
+    let callGraph: PythonCallGraph = await buildPythonCallGraph(root);
+
+    // Filter out test/example/vendor files from call graph analysis
+    callGraph = {
+      ...callGraph,
+      calls: callGraph.calls.filter(c => !SKIP_RE.test(c.file)),
+      functions: new Map([...callGraph.functions].filter(([, f]) => !SKIP_RE.test(f.file))),
+      imports: callGraph.imports.filter(i => !SKIP_RE.test(i.file)),
+      routes: callGraph.routes.filter(r => !SKIP_RE.test(r.file)),
+    };
 
     // Dangerous sinks that should not receive tainted input without sanitization
     const DANGEROUS_SINKS = new Set([

@@ -37,6 +37,24 @@ function verdictColor(verdict: string): string {
   }
 }
 
+function categorize(ruleId: string): string {
+  const id = ruleId.toUpperCase();
+  if (id.includes("SEC") || id.includes("CORS") || id.includes("CSP") || id.includes("INJ") || id.includes("SSRF") || id.includes("SECRET") || id.includes("XSS") || id.includes("TRAV")) return "Security";
+  if (id.includes("AUTH") || id.includes("WEBHOOK")) return "Auth";
+  if (id.includes("PERF") || id.includes("N+1") || id.includes("POOL") || id.includes("TIMEOUT")) return "Performance";
+  if (id.includes("ERR") || id.includes("CATCH")) return "Error Handling";
+  if (id.includes("OBS") || id.includes("LOG") || id.includes("HEALTH") || id.includes("SHUTDOWN")) return "Observability";
+  if (id.includes("ENV") || id.includes("STATE")) return "Config";
+  if (id.includes("AGENT") || id.includes("MCP") || id.includes("PROMPT")) return "Agent Safety";
+  if (id.includes("TEST") || id.includes("CI") || id.includes("DEPLOY")) return "Testing & Deploy";
+  if (id.includes("LIB") || id.includes("SDK") || id.includes("NPM")) return "Library";
+  if (id.includes("PY-")) return "Python";
+  if (id.includes("C-0")) return "C/C++";
+  if (id.includes("TAINT")) return "Taint Analysis";
+  if (id.includes("CLI")) return "CLI";
+  return "Other";
+}
+
 export function renderColoredReport(report: AnalysisReport): string {
   const lines: string[] = [];
   const findings = report.findings;
@@ -44,6 +62,13 @@ export function renderColoredReport(report: AnalysisReport): string {
   const highs = findings.filter(f => f.severity === "high");
   const mediums = findings.filter(f => f.severity === "medium");
   const advisories = findings.filter(f => f.severity === "advisory");
+
+  // Categorize findings by dimension
+  const categories: Record<string, number> = {};
+  for (const f of findings) {
+    const cat = categorize(f.ruleId);
+    categories[cat] = (categories[cat] || 0) + 1;
+  }
 
   // Verdict banner
   lines.push("");
@@ -56,6 +81,16 @@ export function renderColoredReport(report: AnalysisReport): string {
   if (highs.length > 0) lines.push(colorize(`    ${highs.length} high`, severityColor("high")));
   if (mediums.length > 0) lines.push(colorize(`    ${mediums.length} medium`, severityColor("medium")));
   if (advisories.length > 0) lines.push(colorize(`    ${advisories.length} advisory`, severityColor("advisory")));
+
+  // Category breakdown
+  const catEntries = Object.entries(categories).sort((a, b) => b[1] - a[1]);
+  if (catEntries.length > 1) {
+    lines.push("");
+    lines.push(colorize("  By category:", C.dim));
+    for (const [cat, count] of catEntries) {
+      lines.push(colorize(`    ${cat}: ${count}`, C.dim));
+    }
+  }
   lines.push("");
 
   // Phase 0 blockers
@@ -64,8 +99,10 @@ export function renderColoredReport(report: AnalysisReport): string {
     lines.push(colorize("  Fix these before any production traffic.", C.red));
     lines.push("");
     for (const f of blockers) {
+      const loc = f.evidence?.[0]?.location;
+      const fileStr = loc ? `  → ${loc.path}${loc.line ? `:${loc.line}` : ""}` : "";
       lines.push(colorize(`  ${f.ruleId}`, C.red + C.bold) + ` ${f.title}`);
-      if (f.entryPoint) lines.push(colorize(`    Entry: ${f.entryPoint}`, C.dim));
+      if (fileStr) lines.push(colorize(fileStr, C.dim));
       lines.push(colorize(`    ${f.consequence}`, C.dim));
       lines.push("");
     }
@@ -76,8 +113,10 @@ export function renderColoredReport(report: AnalysisReport): string {
     lines.push(colorize("  Phase 1 — Production Baseline", C.yellow + C.bold));
     lines.push("");
     for (const f of highs) {
+      const loc = f.evidence?.[0]?.location;
+      const fileStr = loc ? `  → ${loc.path}${loc.line ? `:${loc.line}` : ""}` : "";
       lines.push(colorize(`  ${f.ruleId}`, C.yellow) + ` ${f.title}`);
-      if (f.entryPoint) lines.push(colorize(`    Entry: ${f.entryPoint}`, C.dim));
+      if (fileStr) lines.push(colorize(fileStr, C.dim));
       lines.push("");
     }
   }
@@ -87,7 +126,10 @@ export function renderColoredReport(report: AnalysisReport): string {
     lines.push(colorize("  Phase 2 — Operational Confidence", C.cyan + C.bold));
     lines.push("");
     for (const f of [...mediums, ...advisories]) {
+      const loc = f.evidence?.[0]?.location;
+      const fileStr = loc ? `  → ${loc.path}${loc.line ? `:${loc.line}` : ""}` : "";
       lines.push(colorize(`  ${f.ruleId}`, f.severity === "medium" ? C.yellow : C.dim) + ` ${f.title}`);
+      if (fileStr) lines.push(colorize(fileStr, C.dim));
       lines.push("");
     }
   }

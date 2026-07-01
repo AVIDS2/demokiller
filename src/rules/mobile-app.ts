@@ -8,6 +8,7 @@ import path from "node:path";
 const SKIP_DIRS = new Set([
   "node_modules", ".next", "dist", "build", "target", "__pycache__",
   ".venv", "venv", "vendor", ".git", "out", "bin", "obj",
+  "fixtures", "testdata", "samples", ".worktrees", ".demokiller", ".claude",
 ]);
 
 const MOBILE_EXTS = [

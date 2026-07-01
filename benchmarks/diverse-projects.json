@@ -1,0 +1,1650 @@
+[
+  {
+    "name": "express",
+    "repo": "https://github.com/expressjs/express",
+    "domain": "web-framework",
+    "language": "JavaScript",
+    "stars": 66000,
+    "why": "De facto Node.js web framework"
+  },
+  {
+    "name": "nestjs",
+    "repo": "https://github.com/nestjs/nest",
+    "domain": "web-framework",
+    "language": "TypeScript",
+    "stars": 76000,
+    "why": "Progressive Node.js framework for enterprise server-side apps"
+  },
+  {
+    "name": "gin",
+    "repo": "https://github.com/gin-gonic/gin",
+    "domain": "web-framework",
+    "language": "Go",
+    "stars": 82000,
+    "why": "High-performance Go HTTP web framework"
+  },
+  {
+    "name": "django",
+    "repo": "https://github.com/django/django",
+    "domain": "web-framework",
+    "language": "Python",
+    "stars": 88000,
+    "why": "The Web framework for perfectionists with deadlines"
+  },
+  {
+    "name": "fastapi",
+    "repo": "https://github.com/fastapi/fastapi",
+    "domain": "api-framework",
+    "language": "Python",
+    "stars": 100000,
+    "why": "High-performance Python API framework with type hints"
+  },
+  {
+    "name": "laravel",
+    "repo": "https://github.com/laravel/laravel",
+    "domain": "web-framework",
+    "language": "PHP",
+    "stars": 85000,
+    "why": "PHP web application framework with expressive syntax"
+  },
+  {
+    "name": "spring-boot",
+    "repo": "https://github.com/spring-projects/spring-boot",
+    "domain": "web-framework",
+    "language": "Java",
+    "stars": 81000,
+    "why": "Production-grade Spring applications with minimal fuss"
+  },
+  {
+    "name": "rails",
+    "repo": "https://github.com/rails/rails",
+    "domain": "web-framework",
+    "language": "Ruby",
+    "stars": 57000,
+    "why": "Ruby on Rails full-stack web framework"
+  },
+  {
+    "name": "vapor",
+    "repo": "https://github.com/vapor/vapor",
+    "domain": "web-framework",
+    "language": "Swift",
+    "stars": 26000,
+    "why": "Server-side Swift HTTP web framework"
+  },
+  {
+    "name": "actix-web",
+    "repo": "https://github.com/actix/actix-web",
+    "domain": "web-framework",
+    "language": "Rust",
+    "stars": 22000,
+    "why": "Actix Web high-performance Rust web framework"
+  },
+  {
+    "name": "rocket",
+    "repo": "https://github.com/rwf2/Rocket",
+    "domain": "web-framework",
+    "language": "Rust",
+    "stars": 26000,
+    "why": "A web framework for Rust"
+  },
+  {
+    "name": "echo",
+    "repo": "https://github.com/labstack/echo",
+    "domain": "web-framework",
+    "language": "Go",
+    "stars": 32000,
+    "why": "High performance minimalist Go web framework"
+  },
+  {
+    "name": "hono",
+    "repo": "https://github.com/honojs/hono",
+    "domain": "web-framework",
+    "language": "TypeScript",
+    "stars": 31000,
+    "why": "Web framework built on Web Standards"
+  },
+  {
+    "name": "phoenix",
+    "repo": "https://github.com/phoenixframework/phoenix",
+    "domain": "web-framework",
+    "language": "Elixir",
+    "stars": 23000,
+    "why": "Peace of mind from prototype to production"
+  },
+  {
+    "name": "adonisjs",
+    "repo": "https://github.com/adonisjs/core",
+    "domain": "web-framework",
+    "language": "TypeScript",
+    "stars": 19000,
+    "why": "TypeScript-first full-stack web framework"
+  },
+  {
+    "name": "fiber",
+    "repo": "https://github.com/gofiber/fiber",
+    "domain": "api-framework",
+    "language": "Go",
+    "stars": 36000,
+    "why": "Express-inspired Go web framework built on Fasthttp"
+  },
+  {
+    "name": "fastify",
+    "repo": "https://github.com/fastify/fastify",
+    "domain": "web-framework",
+    "language": "JavaScript",
+    "stars": 34000,
+    "why": "Fast and low overhead web framework for Node.js"
+  },
+  {
+    "name": "flask",
+    "repo": "https://github.com/pallets/flask",
+    "domain": "web-framework",
+    "language": "Python",
+    "stars": 72000,
+    "why": "The Python micro framework for building web applications"
+  },
+  {
+    "name": "ktor",
+    "repo": "https://github.com/ktorio/ktor",
+    "domain": "web-framework",
+    "language": "Kotlin",
+    "stars": 13000,
+    "why": "Framework for building asynchronous servers and clients in Kotlin"
+  },
+  {
+    "name": "cobra",
+    "repo": "https://github.com/spf13/cobra",
+    "domain": "cli-library",
+    "language": "Go",
+    "stars": 40000,
+    "why": "Library for creating CLI applications in Go"
+  },
+  {
+    "name": "click",
+    "repo": "https://github.com/pallets/click",
+    "domain": "cli-library",
+    "language": "Python",
+    "stars": 16000,
+    "why": "Python composable command-line interface toolkit"
+  },
+  {
+    "name": "clap",
+    "repo": "https://github.com/clap-rs/clap",
+    "domain": "cli-library",
+    "language": "Rust",
+    "stars": 15000,
+    "why": "Full-featured command-line argument parser for Rust"
+  },
+  {
+    "name": "commander",
+    "repo": "https://github.com/tj/commander.js",
+    "domain": "cli-library",
+    "language": "JavaScript",
+    "stars": 27000,
+    "why": "Node.js command-line interfaces solution"
+  },
+  {
+    "name": "oclif",
+    "repo": "https://github.com/oclif/oclif",
+    "domain": "cli-framework",
+    "language": "TypeScript",
+    "stars": 9000,
+    "why": "CLI framework for Node.js by Heroku/Salesforce"
+  },
+  {
+    "name": "prisma",
+    "repo": "https://github.com/prisma/prisma",
+    "domain": "orm",
+    "language": "TypeScript",
+    "stars": 46000,
+    "why": "Next-generation ORM for Node.js and TypeScript"
+  },
+  {
+    "name": "typeorm",
+    "repo": "https://github.com/typeorm/typeorm",
+    "domain": "orm",
+    "language": "TypeScript",
+    "stars": 37000,
+    "why": "TypeScript and JavaScript ORM for Node.js"
+  },
+  {
+    "name": "drizzle-orm",
+    "repo": "https://github.com/drizzle-team/drizzle-orm",
+    "domain": "orm",
+    "language": "TypeScript",
+    "stars": 35000,
+    "why": "TypeScript ORM that feels like writing SQL"
+  },
+  {
+    "name": "sequelize",
+    "repo": "https://github.com/sequelize/sequelize",
+    "domain": "orm",
+    "language": "TypeScript",
+    "stars": 30000,
+    "why": "Feature-rich ORM for modern Node.js and TypeScript"
+  },
+  {
+    "name": "gorm",
+    "repo": "https://github.com/go-gorm/gorm",
+    "domain": "orm",
+    "language": "Go",
+    "stars": 40000,
+    "why": "Fantastic ORM library for Golang"
+  },
+  {
+    "name": "sqlalchemy",
+    "repo": "https://github.com/sqlalchemy/sqlalchemy",
+    "domain": "orm",
+    "language": "Python",
+    "stars": 10000,
+    "why": "The Python SQL toolkit and Object Relational Mapper"
+  },
+  {
+    "name": "diesel",
+    "repo": "https://github.com/diesel-rs/diesel",
+    "domain": "orm",
+    "language": "Rust",
+    "stars": 14000,
+    "why": "Safe extensible ORM and Query Builder for Rust"
+  },
+  {
+    "name": "efcore",
+    "repo": "https://github.com/dotnet/efcore",
+    "domain": "orm",
+    "language": "C#",
+    "stars": 15000,
+    "why": "Entity Framework Core object-database mapper for .NET"
+  },
+  {
+    "name": "mongoose",
+    "repo": "https://github.com/Automattic/mongoose",
+    "domain": "orm",
+    "language": "JavaScript",
+    "stars": 27000,
+    "why": "MongoDB object modeling for Node.js"
+  },
+  {
+    "name": "next-auth",
+    "repo": "https://github.com/nextauthjs/next-auth",
+    "domain": "auth",
+    "language": "TypeScript",
+    "stars": 28000,
+    "why": "Authentication for the Web (Next.js ecosystem)"
+  },
+  {
+    "name": "passport",
+    "repo": "https://github.com/jaredhanson/passport",
+    "domain": "auth",
+    "language": "JavaScript",
+    "stars": 24000,
+    "why": "Simple unobtrusive authentication for Node.js"
+  },
+  {
+    "name": "lucia",
+    "repo": "https://github.com/lucia-auth/lucia",
+    "domain": "auth",
+    "language": "TypeScript",
+    "stars": 10000,
+    "why": "Authentication simple and clean"
+  },
+  {
+    "name": "casbin",
+    "repo": "https://github.com/apache/casbin",
+    "domain": "auth",
+    "language": "Go",
+    "stars": 20000,
+    "why": "Authorization library supporting ACL RBAC ABAC"
+  },
+  {
+    "name": "better-auth",
+    "repo": "https://github.com/better-auth/better-auth",
+    "domain": "auth",
+    "language": "TypeScript",
+    "stars": 29000,
+    "why": "The most comprehensive authentication framework"
+  },
+  {
+    "name": "hydra",
+    "repo": "https://github.com/ory/hydra",
+    "domain": "auth",
+    "language": "Go",
+    "stars": 17000,
+    "why": "OpenID Certified OAuth2.1 provider"
+  },
+  {
+    "name": "strapi",
+    "repo": "https://github.com/strapi/strapi",
+    "domain": "cms",
+    "language": "TypeScript",
+    "stars": 73000,
+    "why": "Leading open-source headless CMS"
+  },
+  {
+    "name": "payload",
+    "repo": "https://github.com/payloadcms/payload",
+    "domain": "cms",
+    "language": "TypeScript",
+    "stars": 43000,
+    "why": "Open-source fullstack Next.js CMS framework"
+  },
+  {
+    "name": "directus",
+    "repo": "https://github.com/directus/directus",
+    "domain": "cms",
+    "language": "TypeScript",
+    "stars": 36000,
+    "why": "Turn your DB into a headless CMS"
+  },
+  {
+    "name": "ghost",
+    "repo": "https://github.com/TryGhost/Ghost",
+    "domain": "cms",
+    "language": "JavaScript",
+    "stars": 54000,
+    "why": "Independent technology for modern publishing and newsletters"
+  },
+  {
+    "name": "wagtail",
+    "repo": "https://github.com/wagtail/wagtail",
+    "domain": "cms",
+    "language": "Python",
+    "stars": 20000,
+    "why": "Django content management system focused on flexibility"
+  },
+  {
+    "name": "medusa",
+    "repo": "https://github.com/medusajs/medusa",
+    "domain": "ecommerce",
+    "language": "TypeScript",
+    "stars": 35000,
+    "why": "The most flexible commerce platform"
+  },
+  {
+    "name": "saleor",
+    "repo": "https://github.com/saleor/saleor",
+    "domain": "ecommerce",
+    "language": "Python",
+    "stars": 23000,
+    "why": "High performance composable headless commerce API"
+  },
+  {
+    "name": "vendure",
+    "repo": "https://github.com/vendurehq/vendure",
+    "domain": "ecommerce",
+    "language": "TypeScript",
+    "stars": 8200,
+    "why": "Open-source headless commerce with NestJS and GraphQL"
+  },
+  {
+    "name": "bagisto",
+    "repo": "https://github.com/bagisto/bagisto",
+    "domain": "ecommerce",
+    "language": "PHP",
+    "stars": 28000,
+    "why": "Free and open source Laravel eCommerce platform"
+  },
+  {
+    "name": "spree",
+    "repo": "https://github.com/spree/spree",
+    "domain": "ecommerce",
+    "language": "Ruby",
+    "stars": 16000,
+    "why": "Open source eCommerce platform for B2B and enterprise"
+  },
+  {
+    "name": "socketio",
+    "repo": "https://github.com/socketio/socket.io",
+    "domain": "realtime",
+    "language": "TypeScript",
+    "stars": 63000,
+    "why": "Bidirectional and low-latency communication for every platform"
+  },
+  {
+    "name": "ws",
+    "repo": "https://github.com/websockets/ws",
+    "domain": "realtime",
+    "language": "JavaScript",
+    "stars": 23000,
+    "why": "Simple to use blazing fast WebSocket client and server"
+  },
+  {
+    "name": "centrifugo",
+    "repo": "https://github.com/centrifugal/centrifugo",
+    "domain": "realtime",
+    "language": "Go",
+    "stars": 10000,
+    "why": "Scalable real-time messaging server self-hosted alternative"
+  },
+  {
+    "name": "gorilla-websocket",
+    "repo": "https://github.com/gorilla/websocket",
+    "domain": "realtime",
+    "language": "Go",
+    "stars": 25000,
+    "why": "Fast well-tested WebSocket implementation for Go"
+  },
+  {
+    "name": "terraform",
+    "repo": "https://github.com/hashicorp/terraform",
+    "domain": "devops-iac",
+    "language": "Go",
+    "stars": 49000,
+    "why": "Infrastructure as Code tool for safe predictable changes"
+  },
+  {
+    "name": "kubernetes",
+    "repo": "https://github.com/kubernetes/kubernetes",
+    "domain": "devops-orchestration",
+    "language": "Go",
+    "stars": 123000,
+    "why": "Production-Grade Container Scheduling and Management"
+  },
+  {
+    "name": "ansible",
+    "repo": "https://github.com/ansible/ansible",
+    "domain": "devops-automation",
+    "language": "Python",
+    "stars": 65000,
+    "why": "IT automation and configuration management"
+  },
+  {
+    "name": "pulumi",
+    "repo": "https://github.com/pulumi/pulumi",
+    "domain": "devops-iac",
+    "language": "Go",
+    "stars": 25000,
+    "why": "Infrastructure as Code in any programming language"
+  },
+  {
+    "name": "moby",
+    "repo": "https://github.com/moby/moby",
+    "domain": "devops-container",
+    "language": "Go",
+    "stars": 72000,
+    "why": "The Moby Project container ecosystem"
+  },
+  {
+    "name": "traefik",
+    "repo": "https://github.com/traefik/traefik",
+    "domain": "devops-proxy",
+    "language": "Go",
+    "stars": 64000,
+    "why": "The Cloud Native Application Proxy"
+  },
+  {
+    "name": "grafana",
+    "repo": "https://github.com/grafana/grafana",
+    "domain": "monitoring",
+    "language": "TypeScript",
+    "stars": 75000,
+    "why": "Open and composable observability and data visualization platform"
+  },
+  {
+    "name": "prometheus",
+    "repo": "https://github.com/prometheus/prometheus",
+    "domain": "monitoring",
+    "language": "Go",
+    "stars": 65000,
+    "why": "The Prometheus monitoring system and time series database"
+  },
+  {
+    "name": "sentry",
+    "repo": "https://github.com/getsentry/sentry",
+    "domain": "monitoring",
+    "language": "Python",
+    "stars": 44000,
+    "why": "Developer-first error tracking and performance monitoring"
+  },
+  {
+    "name": "uptime-kuma",
+    "repo": "https://github.com/louislam/uptime-kuma",
+    "domain": "monitoring",
+    "language": "JavaScript",
+    "stars": 89000,
+    "why": "A fancy self-hosted monitoring tool"
+  },
+  {
+    "name": "langfuse",
+    "repo": "https://github.com/langfuse/langfuse",
+    "domain": "monitoring",
+    "language": "TypeScript",
+    "stars": 30000,
+    "why": "Open source AI engineering platform for LLM observability"
+  },
+  {
+    "name": "signoz",
+    "repo": "https://github.com/SigNoz/signoz",
+    "domain": "monitoring",
+    "language": "TypeScript",
+    "stars": 28000,
+    "why": "Open-source observability platform native to OpenTelemetry"
+  },
+  {
+    "name": "playwright",
+    "repo": "https://github.com/microsoft/playwright",
+    "domain": "testing",
+    "language": "TypeScript",
+    "stars": 92000,
+    "why": "Framework for Web Testing and Automation"
+  },
+  {
+    "name": "jest",
+    "repo": "https://github.com/jestjs/jest",
+    "domain": "testing",
+    "language": "TypeScript",
+    "stars": 45000,
+    "why": "Delightful JavaScript Testing"
+  },
+  {
+    "name": "vitest",
+    "repo": "https://github.com/vitest-dev/vitest",
+    "domain": "testing",
+    "language": "TypeScript",
+    "stars": 15000,
+    "why": "Next generation testing framework powered by Vite"
+  },
+  {
+    "name": "testify",
+    "repo": "https://github.com/stretchr/testify",
+    "domain": "testing",
+    "language": "Go",
+    "stars": 26000,
+    "why": "Toolkit with common assertions and mocks for Go"
+  },
+  {
+    "name": "cypress",
+    "repo": "https://github.com/cypress-io/cypress",
+    "domain": "testing",
+    "language": "JavaScript",
+    "stars": 48000,
+    "why": "Fast easy and reliable testing for anything in a browser"
+  },
+  {
+    "name": "vite",
+    "repo": "https://github.com/vitejs/vite",
+    "domain": "build-tool",
+    "language": "TypeScript",
+    "stars": 82000,
+    "why": "Next generation frontend tooling"
+  },
+  {
+    "name": "webpack",
+    "repo": "https://github.com/webpack/webpack",
+    "domain": "build-tool",
+    "language": "JavaScript",
+    "stars": 66000,
+    "why": "Bundler for javascript and friends"
+  },
+  {
+    "name": "esbuild",
+    "repo": "https://github.com/evanw/esbuild",
+    "domain": "build-tool",
+    "language": "Go",
+    "stars": 39000,
+    "why": "Extremely fast JavaScript bundler and minifier"
+  },
+  {
+    "name": "turborepo",
+    "repo": "https://github.com/vercel/turborepo",
+    "domain": "build-tool",
+    "language": "Rust",
+    "stars": 31000,
+    "why": "Build system optimized for JavaScript and TypeScript"
+  },
+  {
+    "name": "rspack",
+    "repo": "https://github.com/web-infra-dev/rspack",
+    "domain": "build-tool",
+    "language": "Rust",
+    "stars": 13000,
+    "why": "Fast Rust-based bundler with modernized webpack API"
+  },
+  {
+    "name": "langchain",
+    "repo": "https://github.com/langchain-ai/langchain",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 140000,
+    "why": "The agent engineering platform"
+  },
+  {
+    "name": "transformers",
+    "repo": "https://github.com/huggingface/transformers",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 162000,
+    "why": "State-of-the-art ML models for text vision audio and multimodal"
+  },
+  {
+    "name": "gradio",
+    "repo": "https://github.com/gradio-app/gradio",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 40000,
+    "why": "Build and share delightful machine learning apps"
+  },
+  {
+    "name": "mlflow",
+    "repo": "https://github.com/mlflow/mlflow",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 27000,
+    "why": "Open source AI platform for ML lifecycle"
+  },
+  {
+    "name": "litellm",
+    "repo": "https://github.com/BerriAI/litellm",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 52000,
+    "why": "Python SDK to call 100+ LLM APIs in OpenAI format"
+  },
+  {
+    "name": "scikit-learn",
+    "repo": "https://github.com/scikit-learn/scikit-learn",
+    "domain": "ml-ai",
+    "language": "Python",
+    "stars": 67000,
+    "why": "Machine learning in Python"
+  },
+  {
+    "name": "react-native",
+    "repo": "https://github.com/facebook/react-native",
+    "domain": "mobile",
+    "language": "C++",
+    "stars": 126000,
+    "why": "Framework for building native applications using React"
+  },
+  {
+    "name": "flutter",
+    "repo": "https://github.com/flutter/flutter",
+    "domain": "mobile",
+    "language": "Dart",
+    "stars": 178000,
+    "why": "Easy and fast to build beautiful apps for mobile and beyond"
+  },
+  {
+    "name": "expo",
+    "repo": "https://github.com/expo/expo",
+    "domain": "mobile",
+    "language": "TypeScript",
+    "stars": 50000,
+    "why": "Framework for making universal native apps with React"
+  },
+  {
+    "name": "capacitor",
+    "repo": "https://github.com/ionic-team/capacitor",
+    "domain": "mobile",
+    "language": "TypeScript",
+    "stars": 13000,
+    "why": "Cross-platform native runtime for web apps"
+  },
+  {
+    "name": "tauri",
+    "repo": "https://github.com/tauri-apps/tauri",
+    "domain": "desktop",
+    "language": "Rust",
+    "stars": 108000,
+    "why": "Build smaller faster and more secure desktop apps"
+  },
+  {
+    "name": "electron",
+    "repo": "https://github.com/electron/electron",
+    "domain": "desktop",
+    "language": "C++",
+    "stars": 122000,
+    "why": "Build cross-platform desktop apps with JavaScript HTML and CSS"
+  },
+  {
+    "name": "phaser",
+    "repo": "https://github.com/phaserjs/phaser",
+    "domain": "game",
+    "language": "JavaScript",
+    "stars": 37000,
+    "why": "Fast free and fun open source HTML5 game framework"
+  },
+  {
+    "name": "babylonjs",
+    "repo": "https://github.com/BabylonJS/Babylon.js",
+    "domain": "game",
+    "language": "TypeScript",
+    "stars": 26000,
+    "why": "Powerful beautiful simple open game and rendering engine"
+  },
+  {
+    "name": "threejs",
+    "repo": "https://github.com/mrdoob/three.js",
+    "domain": "3d-graphics",
+    "language": "JavaScript",
+    "stars": 105000,
+    "why": "JavaScript 3D library"
+  },
+  {
+    "name": "godot",
+    "repo": "https://github.com/godotengine/godot",
+    "domain": "game-engine",
+    "language": "C++",
+    "stars": 113000,
+    "why": "Multi-platform 2D and 3D game engine"
+  },
+  {
+    "name": "go-ethereum",
+    "repo": "https://github.com/ethereum/go-ethereum",
+    "domain": "blockchain",
+    "language": "Go",
+    "stars": 51000,
+    "why": "Go implementation of the Ethereum protocol"
+  },
+  {
+    "name": "hardhat",
+    "repo": "https://github.com/NomicFoundation/hardhat",
+    "domain": "blockchain",
+    "language": "TypeScript",
+    "stars": 8000,
+    "why": "Ethereum development environment"
+  },
+  {
+    "name": "ethersjs",
+    "repo": "https://github.com/ethers-io/ethers.js",
+    "domain": "blockchain",
+    "language": "TypeScript",
+    "stars": 15000,
+    "why": "Complete Ethereum library and wallet implementation"
+  },
+  {
+    "name": "solidity",
+    "repo": "https://github.com/ethereum/solidity",
+    "domain": "blockchain",
+    "language": "C++",
+    "stars": 24000,
+    "why": "Smart Contract Programming Language"
+  },
+  {
+    "name": "home-assistant",
+    "repo": "https://github.com/home-assistant/core",
+    "domain": "iot",
+    "language": "Python",
+    "stars": 88000,
+    "why": "Open source home automation putting local control first"
+  },
+  {
+    "name": "thingsboard",
+    "repo": "https://github.com/thingsboard/thingsboard",
+    "domain": "iot",
+    "language": "Java",
+    "stars": 22000,
+    "why": "Open-source IoT Platform device management and visualization"
+  },
+  {
+    "name": "tasmota",
+    "repo": "https://github.com/arendst/Tasmota",
+    "domain": "iot",
+    "language": "C",
+    "stars": 25000,
+    "why": "Alternative firmware for ESP8266 and ESP32 devices"
+  },
+  {
+    "name": "ohmyzsh",
+    "repo": "https://github.com/ohmyzsh/ohmyzsh",
+    "domain": "shell",
+    "language": "Shell",
+    "stars": 188000,
+    "why": "Delightful community-driven zsh configuration"
+  },
+  {
+    "name": "bats-core",
+    "repo": "https://github.com/bats-core/bats-core",
+    "domain": "shell-testing",
+    "language": "Shell",
+    "stars": 5000,
+    "why": "Bash Automated Testing System"
+  },
+  {
+    "name": "shellcheck",
+    "repo": "https://github.com/koalaman/shellcheck",
+    "domain": "shell-lint",
+    "language": "Haskell",
+    "stars": 37000,
+    "why": "Shell script static analysis tool"
+  },
+  {
+    "name": "docusaurus",
+    "repo": "https://github.com/facebook/docusaurus",
+    "domain": "documentation",
+    "language": "TypeScript",
+    "stars": 65000,
+    "why": "Easy to maintain open source documentation websites"
+  },
+  {
+    "name": "vitepress",
+    "repo": "https://github.com/vuejs/vitepress",
+    "domain": "documentation",
+    "language": "TypeScript",
+    "stars": 15000,
+    "why": "Vite and Vue powered static site generator"
+  },
+  {
+    "name": "mkdocs-material",
+    "repo": "https://github.com/squidfunk/mkdocs-material",
+    "domain": "documentation",
+    "language": "Python",
+    "stars": 27000,
+    "why": "Documentation that simply works"
+  },
+  {
+    "name": "docsify",
+    "repo": "https://github.com/docsifyjs/docsify",
+    "domain": "documentation",
+    "language": "JavaScript",
+    "stars": 31000,
+    "why": "A magical documentation site generator"
+  },
+  {
+    "name": "rocket-chat",
+    "repo": "https://github.com/RocketChat/Rocket.Chat",
+    "domain": "chat",
+    "language": "TypeScript",
+    "stars": 46000,
+    "why": "The Secure CommsOS for mission-critical operations"
+  },
+  {
+    "name": "zulip",
+    "repo": "https://github.com/zulip/zulip",
+    "domain": "chat",
+    "language": "Python",
+    "stars": 25000,
+    "why": "Open-source team chat that helps teams stay productive"
+  },
+  {
+    "name": "mattermost",
+    "repo": "https://github.com/mattermost/mattermost",
+    "domain": "chat",
+    "language": "Go",
+    "stars": 32000,
+    "why": "Open-source platform for secure collaboration"
+  },
+  {
+    "name": "n8n",
+    "repo": "https://github.com/n8n-io/n8n",
+    "domain": "workflow",
+    "language": "TypeScript",
+    "stars": 194000,
+    "why": "Fair-code workflow automation platform with native AI"
+  },
+  {
+    "name": "airflow",
+    "repo": "https://github.com/apache/airflow",
+    "domain": "workflow",
+    "language": "Python",
+    "stars": 46000,
+    "why": "Platform to programmatically author schedule and monitor workflows"
+  },
+  {
+    "name": "dagster",
+    "repo": "https://github.com/dagster-io/dagster",
+    "domain": "workflow",
+    "language": "Python",
+    "stars": 16000,
+    "why": "Orchestration platform for data asset development"
+  },
+  {
+    "name": "kestra",
+    "repo": "https://github.com/kestra-io/kestra",
+    "domain": "workflow",
+    "language": "Java",
+    "stars": 27000,
+    "why": "Event Driven Orchestration and Scheduling Platform"
+  },
+  {
+    "name": "airbyte",
+    "repo": "https://github.com/airbytehq/airbyte",
+    "domain": "data-pipeline",
+    "language": "Python",
+    "stars": 22000,
+    "why": "Open-source data movement for ELT pipelines"
+  },
+  {
+    "name": "dbt-core",
+    "repo": "https://github.com/dbt-labs/dbt-core",
+    "domain": "data-pipeline",
+    "language": "Python",
+    "stars": 11000,
+    "why": "Data build tool for analytics engineering"
+  },
+  {
+    "name": "prefect",
+    "repo": "https://github.com/PrefectHQ/prefect",
+    "domain": "data-pipeline",
+    "language": "Python",
+    "stars": 23000,
+    "why": "Workflow orchestration framework for resilient data pipelines"
+  },
+  {
+    "name": "hasura",
+    "repo": "https://github.com/hasura/graphql-engine",
+    "domain": "graphql",
+    "language": "TypeScript",
+    "stars": 32000,
+    "why": "Blazing fast instant realtime GraphQL APIs on all your data"
+  },
+  {
+    "name": "apollo-server",
+    "repo": "https://github.com/apollographql/apollo-server",
+    "domain": "graphql",
+    "language": "TypeScript",
+    "stars": 14000,
+    "why": "Spec-compliant and production ready JavaScript GraphQL server"
+  },
+  {
+    "name": "graphql-yoga",
+    "repo": "https://github.com/dotansimha/graphql-yoga",
+    "domain": "graphql",
+    "language": "TypeScript",
+    "stars": 8000,
+    "why": "Fully-featured GraphQL server for all environments"
+  },
+  {
+    "name": "mercurius",
+    "repo": "https://github.com/mercurius-js/mercurius",
+    "domain": "graphql",
+    "language": "JavaScript",
+    "stars": 2000,
+    "why": "GraphQL adapter for Fastify"
+  },
+  {
+    "name": "serverless",
+    "repo": "https://github.com/serverless/serverless",
+    "domain": "serverless",
+    "language": "JavaScript",
+    "stars": 47000,
+    "why": "Serverless Framework for auto-scaling apps"
+  },
+  {
+    "name": "sst",
+    "repo": "https://github.com/sst/sst",
+    "domain": "serverless",
+    "language": "TypeScript",
+    "stars": 24000,
+    "why": "Build modern full-stack applications on AWS"
+  },
+  {
+    "name": "openfaas",
+    "repo": "https://github.com/openfaas/faas",
+    "domain": "serverless",
+    "language": "Go",
+    "stars": 26000,
+    "why": "OpenFaaS Serverless Functions Made Simple"
+  },
+  {
+    "name": "pnpm",
+    "repo": "https://github.com/pnpm/pnpm",
+    "domain": "package-manager",
+    "language": "Rust",
+    "stars": 36000,
+    "why": "Fast disk space efficient package manager"
+  },
+  {
+    "name": "yarn",
+    "repo": "https://github.com/yarnpkg/yarn",
+    "domain": "package-manager",
+    "language": "JavaScript",
+    "stars": 42000,
+    "why": "Fast reliable and secure dependency management"
+  },
+  {
+    "name": "composer",
+    "repo": "https://github.com/composer/composer",
+    "domain": "package-manager",
+    "language": "PHP",
+    "stars": 29000,
+    "why": "Dependency Manager for PHP"
+  },
+  {
+    "name": "cargo",
+    "repo": "https://github.com/rust-lang/cargo",
+    "domain": "package-manager",
+    "language": "Rust",
+    "stars": 15000,
+    "why": "The Rust package manager"
+  },
+  {
+    "name": "poetry",
+    "repo": "https://github.com/python-poetry/poetry",
+    "domain": "package-manager",
+    "language": "Python",
+    "stars": 34000,
+    "why": "Python packaging and dependency management made easy"
+  },
+  {
+    "name": "biome",
+    "repo": "https://github.com/biomejs/biome",
+    "domain": "linting",
+    "language": "Rust",
+    "stars": 18000,
+    "why": "One toolchain for your web project formatting and linting"
+  },
+  {
+    "name": "ruff",
+    "repo": "https://github.com/astral-sh/ruff",
+    "domain": "linting",
+    "language": "Rust",
+    "stars": 40000,
+    "why": "Extremely fast Python linter and code formatter"
+  },
+  {
+    "name": "eslint",
+    "repo": "https://github.com/eslint/eslint",
+    "domain": "linting",
+    "language": "JavaScript",
+    "stars": 26000,
+    "why": "Find and fix problems in JavaScript code"
+  },
+  {
+    "name": "prettier",
+    "repo": "https://github.com/prettier/prettier",
+    "domain": "formatting",
+    "language": "JavaScript",
+    "stars": 52000,
+    "why": "Opinionated code formatter"
+  },
+  {
+    "name": "husky",
+    "repo": "https://github.com/typicode/husky",
+    "domain": "git-tools",
+    "language": "JavaScript",
+    "stars": 35000,
+    "why": "Git hooks made easy"
+  },
+  {
+    "name": "simple-git",
+    "repo": "https://github.com/steveukx/git-js",
+    "domain": "git-tools",
+    "language": "TypeScript",
+    "stars": 4000,
+    "why": "Simple interface for running git commands in Node.js"
+  },
+  {
+    "name": "sharp",
+    "repo": "https://github.com/lovell/sharp",
+    "domain": "image-processing",
+    "language": "JavaScript",
+    "stars": 32000,
+    "why": "High performance Node.js image processing"
+  },
+  {
+    "name": "pillow",
+    "repo": "https://github.com/python-pillow/Pillow",
+    "domain": "image-processing",
+    "language": "Python",
+    "stars": 14000,
+    "why": "Python Imaging Library fork"
+  },
+  {
+    "name": "ffmpeg",
+    "repo": "https://github.com/FFmpeg/FFmpeg",
+    "domain": "video-processing",
+    "language": "C",
+    "stars": 62000,
+    "why": "The leading multimedia framework"
+  },
+  {
+    "name": "nodemailer",
+    "repo": "https://github.com/nodemailer/nodemailer",
+    "domain": "email",
+    "language": "JavaScript",
+    "stars": 18000,
+    "why": "Send e-mails with Node.js easy as cake"
+  },
+  {
+    "name": "react-email",
+    "repo": "https://github.com/resend/react-email",
+    "domain": "email",
+    "language": "TypeScript",
+    "stars": 19000,
+    "why": "Build and send emails using React"
+  },
+  {
+    "name": "phpmailer",
+    "repo": "https://github.com/PHPMailer/PHPMailer",
+    "domain": "email",
+    "language": "PHP",
+    "stars": 22000,
+    "why": "The classic email sending library for PHP"
+  },
+  {
+    "name": "hyperswitch",
+    "repo": "https://github.com/juspay/hyperswitch",
+    "domain": "payment",
+    "language": "Rust",
+    "stars": 43000,
+    "why": "Open source composable payments platform"
+  },
+  {
+    "name": "stripe-node",
+    "repo": "https://github.com/stripe/stripe-node",
+    "domain": "payment",
+    "language": "TypeScript",
+    "stars": 4000,
+    "why": "Node.js library for the Stripe API"
+  },
+  {
+    "name": "react-leaflet",
+    "repo": "https://github.com/PaulLeCam/react-leaflet",
+    "domain": "maps",
+    "language": "TypeScript",
+    "stars": 5600,
+    "why": "React components for Leaflet maps"
+  },
+  {
+    "name": "mapbox-gl-js",
+    "repo": "https://github.com/mapbox/mapbox-gl-js",
+    "domain": "maps",
+    "language": "TypeScript",
+    "stars": 11000,
+    "why": "Interactive thoroughly customizable maps"
+  },
+  {
+    "name": "bullmq",
+    "repo": "https://github.com/taskforcesh/bullmq",
+    "domain": "queue",
+    "language": "TypeScript",
+    "stars": 6000,
+    "why": "Premium queue package for distributed jobs in Node.js"
+  },
+  {
+    "name": "nsq",
+    "repo": "https://github.com/nsqio/nsq",
+    "domain": "messaging",
+    "language": "Go",
+    "stars": 26000,
+    "why": "A realtime distributed messaging platform"
+  },
+  {
+    "name": "nats-server",
+    "repo": "https://github.com/nats-io/nats-server",
+    "domain": "messaging",
+    "language": "Go",
+    "stars": 20000,
+    "why": "High-performance server for NATS.io cloud and edge messaging"
+  },
+  {
+    "name": "rabbitmq-server",
+    "repo": "https://github.com/rabbitmq/rabbitmq-server",
+    "domain": "messaging",
+    "language": "JavaScript",
+    "stars": 14000,
+    "why": "Open source RabbitMQ core server"
+  },
+  {
+    "name": "meilisearch",
+    "repo": "https://github.com/meilisearch/meilisearch",
+    "domain": "search",
+    "language": "Rust",
+    "stars": 58000,
+    "why": "Lightning-fast search engine with AI-powered hybrid search"
+  },
+  {
+    "name": "typesense",
+    "repo": "https://github.com/typesense/typesense",
+    "domain": "search",
+    "language": "C++",
+    "stars": 26000,
+    "why": "Fast typo tolerant in-memory fuzzy search engine"
+  },
+  {
+    "name": "elasticsearch",
+    "repo": "https://github.com/elastic/elasticsearch",
+    "domain": "search",
+    "language": "Java",
+    "stars": 77000,
+    "why": "Free and Open Source Distributed RESTful Search Engine"
+  },
+  {
+    "name": "redis",
+    "repo": "https://github.com/redis/redis",
+    "domain": "database",
+    "language": "C",
+    "stars": 75000,
+    "why": "Fastest and most feature-rich cache and data structure server"
+  },
+  {
+    "name": "clickhouse",
+    "repo": "https://github.com/ClickHouse/ClickHouse",
+    "domain": "database",
+    "language": "C++",
+    "stars": 48000,
+    "why": "ClickHouse real-time analytics database management system"
+  },
+  {
+    "name": "supabase",
+    "repo": "https://github.com/supabase/supabase",
+    "domain": "baas",
+    "language": "TypeScript",
+    "stars": 105000,
+    "why": "The Postgres development platform"
+  },
+  {
+    "name": "appwrite",
+    "repo": "https://github.com/appwrite/appwrite",
+    "domain": "baas",
+    "language": "TypeScript",
+    "stars": 56000,
+    "why": "Complete cloud infrastructure for web mobile and AI apps"
+  },
+  {
+    "name": "storybook",
+    "repo": "https://github.com/storybookjs/storybook",
+    "domain": "ui-tooling",
+    "language": "TypeScript",
+    "stars": 90000,
+    "why": "Industry standard for building documenting and testing UI components"
+  },
+  {
+    "name": "mermaid",
+    "repo": "https://github.com/mermaid-js/mermaid",
+    "domain": "diagramming",
+    "language": "TypeScript",
+    "stars": 89000,
+    "why": "Generation of diagrams like flowcharts from text"
+  },
+  {
+    "name": "nocodb",
+    "repo": "https://github.com/nocodb/nocodb",
+    "domain": "nocode",
+    "language": "TypeScript",
+    "stars": 64000,
+    "why": "Free and self-hostable Airtable alternative"
+  },
+  {
+    "name": "twenty",
+    "repo": "https://github.com/twentyhq/twenty",
+    "domain": "crm",
+    "language": "TypeScript",
+    "stars": 52000,
+    "why": "The open alternative to Salesforce designed for AI"
+  },
+  {
+    "name": "plane",
+    "repo": "https://github.com/makeplane/plane",
+    "domain": "project-management",
+    "language": "TypeScript",
+    "stars": 54000,
+    "why": "Open-source Jira Linear Monday and ClickUp alternative"
+  },
+  {
+    "name": "hoppscotch",
+    "repo": "https://github.com/hoppscotch/hoppscotch",
+    "domain": "api-client",
+    "language": "TypeScript",
+    "stars": 80000,
+    "why": "Open-source API Development Ecosystem alternative to Postman"
+  },
+  {
+    "name": "insomnia",
+    "repo": "https://github.com/Kong/insomnia",
+    "domain": "api-client",
+    "language": "TypeScript",
+    "stars": 40000,
+    "why": "Open-source cross-platform API client for GraphQL REST WebSockets"
+  },
+  {
+    "name": "kong",
+    "repo": "https://github.com/Kong/kong",
+    "domain": "api-gateway",
+    "language": "Lua",
+    "stars": 44000,
+    "why": "The API and AI Gateway"
+  },
+  {
+    "name": "immich",
+    "repo": "https://github.com/immich-app/immich",
+    "domain": "photo-management",
+    "language": "TypeScript",
+    "stars": 105000,
+    "why": "High performance self-hosted photo and video management"
+  },
+  {
+    "name": "vaultwarden",
+    "repo": "https://github.com/dani-garcia/vaultwarden",
+    "domain": "password-manager",
+    "language": "Rust",
+    "stars": 63000,
+    "why": "Unofficial Bitwarden compatible server"
+  },
+  {
+    "name": "novu",
+    "repo": "https://github.com/novuhq/novu",
+    "domain": "notifications",
+    "language": "TypeScript",
+    "stars": 39000,
+    "why": "Open-source notification infrastructure for agents and products"
+  },
+  {
+    "name": "huginn",
+    "repo": "https://github.com/huginn/huginn",
+    "domain": "automation-agent",
+    "language": "Ruby",
+    "stars": 50000,
+    "why": "Create agents that monitor and act on your behalf"
+  },
+  {
+    "name": "jitsi-meet",
+    "repo": "https://github.com/jitsi/jitsi-meet",
+    "domain": "video-conferencing",
+    "language": "TypeScript",
+    "stars": 30000,
+    "why": "Secure simple and scalable video conferences"
+  },
+  {
+    "name": "remotion",
+    "repo": "https://github.com/remotion-dev/remotion",
+    "domain": "video-creation",
+    "language": "TypeScript",
+    "stars": 52000,
+    "why": "Make videos programmatically with React"
+  },
+  {
+    "name": "minio",
+    "repo": "https://github.com/minio/minio",
+    "domain": "object-storage",
+    "language": "Go",
+    "stars": 61000,
+    "why": "High-performance S3 compatible object store"
+  },
+  {
+    "name": "gitea",
+    "repo": "https://github.com/go-gitea/gitea",
+    "domain": "git-hosting",
+    "language": "Go",
+    "stars": 57000,
+    "why": "Git with a cup of tea self-hosted software development service"
+  },
+  {
+    "name": "verdaccio",
+    "repo": "https://github.com/verdaccio/verdaccio",
+    "domain": "registry",
+    "language": "TypeScript",
+    "stars": 17000,
+    "why": "Lightweight Node.js private proxy registry"
+  },
+  {
+    "name": "dify",
+    "repo": "https://github.com/langgenius/dify",
+    "domain": "ai-platform",
+    "language": "TypeScript",
+    "stars": 147000,
+    "why": "Production-ready platform for agentic workflow development"
+  },
+  {
+    "name": "open-webui",
+    "repo": "https://github.com/open-webui/open-webui",
+    "domain": "ai-chat",
+    "language": "Python",
+    "stars": 143000,
+    "why": "User-friendly AI interface supporting Ollama and OpenAI"
+  },
+  {
+    "name": "coolify",
+    "repo": "https://github.com/coollabsio/coolify",
+    "domain": "paas",
+    "language": "PHP",
+    "stars": 58000,
+    "why": "Open-source self-hostable PaaS alternative to Vercel and Heroku"
+  },
+  {
+    "name": "dokploy",
+    "repo": "https://github.com/Dokploy/dokploy",
+    "domain": "paas",
+    "language": "TypeScript",
+    "stars": 35000,
+    "why": "Open Source Alternative to Vercel Netlify and Heroku"
+  },
+  {
+    "name": "k9s",
+    "repo": "https://github.com/derailed/k9s",
+    "domain": "kubernetes-cli",
+    "language": "Go",
+    "stars": 34000,
+    "why": "Kubernetes CLI to manage your clusters in style"
+  },
+  {
+    "name": "trivy",
+    "repo": "https://github.com/aquasecurity/trivy",
+    "domain": "security-scanner",
+    "language": "Go",
+    "stars": 37000,
+    "why": "Find vulnerabilities misconfigurations secrets in containers and repos"
+  },
+  {
+    "name": "stirling-pdf",
+    "repo": "https://github.com/Stirling-Tools/Stirling-PDF",
+    "domain": "pdf-tools",
+    "language": "Java",
+    "stars": 85000,
+    "why": "Number one PDF Application on GitHub"
+  },
+  {
+    "name": "openemr",
+    "repo": "https://github.com/openemr/openemr",
+    "domain": "healthcare",
+    "language": "PHP",
+    "stars": 5200,
+    "why": "Most popular open source electronic health records solution"
+  },
+  {
+    "name": "medplum",
+    "repo": "https://github.com/medplum/medplum",
+    "domain": "healthcare",
+    "language": "TypeScript",
+    "stars": 2500,
+    "why": "Healthcare platform for developing compliant FHIR applications"
+  },
+  {
+    "name": "freeCodeCamp",
+    "repo": "https://github.com/freeCodeCamp/freeCodeCamp",
+    "domain": "education",
+    "language": "TypeScript",
+    "stars": 451000,
+    "why": "Open-source codebase and curriculum for learning programming"
+  },
+  {
+    "name": "umami",
+    "repo": "https://github.com/umami-software/umami",
+    "domain": "analytics",
+    "language": "TypeScript",
+    "stars": 26000,
+    "why": "Simple fast privacy-focused alternative to Google Analytics"
+  },
+  {
+    "name": "penpot",
+    "repo": "https://github.com/penpot/penpot",
+    "domain": "design-tool",
+    "language": "Clojure",
+    "stars": 37000,
+    "why": "Open source design and prototyping platform"
+  },
+  {
+    "name": "memos",
+    "repo": "https://github.com/usememos/memos",
+    "domain": "note-taking",
+    "language": "Go",
+    "stars": 61000,
+    "why": "Open-source self-hosted note-taking tool"
+  },
+  {
+    "name": "siyuan",
+    "repo": "https://github.com/siyuan-note/siyuan",
+    "domain": "knowledge-base",
+    "language": "TypeScript",
+    "stars": 45000,
+    "why": "Privacy-first self-hosted personal knowledge management"
+  },
+  {
+    "name": "joplin",
+    "repo": "https://github.com/laurent22/joplin",
+    "domain": "note-taking",
+    "language": "TypeScript",
+    "stars": 55000,
+    "why": "Privacy-focused note taking app with sync capabilities"
+  },
+  {
+    "name": "activepieces",
+    "repo": "https://github.com/activepieces/activepieces",
+    "domain": "automation",
+    "language": "TypeScript",
+    "stars": 23000,
+    "why": "AI Agents and MCPs and AI Workflow Automation"
+  },
+  {
+    "name": "triggerdev",
+    "repo": "https://github.com/triggerdotdev/trigger.dev",
+    "domain": "background-jobs",
+    "language": "TypeScript",
+    "stars": 15000,
+    "why": "Build and deploy fully-managed AI agents and workflows"
+  },
+  {
+    "name": "xxl-job",
+    "repo": "https://github.com/xuxueli/xxl-job",
+    "domain": "scheduler",
+    "language": "Java",
+    "stars": 30000,
+    "why": "Distributed task scheduling framework"
+  },
+  {
+    "name": "bull",
+    "repo": "https://github.com/OptimalBits/bull",
+    "domain": "queue",
+    "language": "JavaScript",
+    "stars": 16000,
+    "why": "Premium Queue package for distributed jobs and messages"
+  },
+  {
+    "name": "avalonia",
+    "repo": "https://github.com/AvaloniaUI/Avalonia",
+    "domain": "desktop-ui",
+    "language": "C#",
+    "stars": 31000,
+    "why": "Develop Desktop Embedded Mobile and WebAssembly apps with C#"
+  },
+  {
+    "name": "masstransit",
+    "repo": "https://github.com/MassTransit/MassTransit",
+    "domain": "message-bus",
+    "language": "C#",
+    "stars": 8000,
+    "why": "Distributed Application Framework for .NET"
+  },
+  {
+    "name": "quivr",
+    "repo": "https://github.com/QuivrHQ/quivr",
+    "domain": "rag",
+    "language": "Python",
+    "stars": 39000,
+    "why": "Opinionated RAG for integrating GenAI in your apps"
+  },
+  {
+    "name": "langgraph",
+    "repo": "https://github.com/langchain-ai/langgraph",
+    "domain": "ai-agents",
+    "language": "Python",
+    "stars": 36000,
+    "why": "Build resilient agents"
+  },
+  {
+    "name": "swagger-ui",
+    "repo": "https://github.com/swagger-api/swagger-ui",
+    "domain": "api-docs",
+    "language": "JavaScript",
+    "stars": 29000,
+    "why": "Dynamically generate beautiful API documentation from Swagger spec"
+  },
+  {
+    "name": "grpc-gateway",
+    "repo": "https://github.com/grpc-ecosystem/grpc-gateway",
+    "domain": "grpc",
+    "language": "Go",
+    "stars": 20000,
+    "why": "gRPC to JSON proxy generator"
+  },
+  {
+    "name": "firecracker",
+    "repo": "https://github.com/firecracker-microvm/firecracker",
+    "domain": "microvm",
+    "language": "Rust",
+    "stars": 35000,
+    "why": "Secure and fast microVMs for serverless computing"
+  },
+  {
+    "name": "influxdb",
+    "repo": "https://github.com/influxdata/influxdb",
+    "domain": "time-series-db",
+    "language": "Rust",
+    "stars": 32000,
+    "why": "Scalable datastore for metrics events and real-time analytics"
+  },
+  {
+    "name": "surrealdb",
+    "repo": "https://github.com/surrealdb/surrealdb",
+    "domain": "multi-model-db",
+    "language": "Rust",
+    "stars": 33000,
+    "why": "Scalable distributed collaborative document-graph database"
+  },
+  {
+    "name": "deno",
+    "repo": "https://github.com/denoland/deno",
+    "domain": "runtime",
+    "language": "Rust",
+    "stars": 101000,
+    "why": "Modern runtime for JavaScript and TypeScript"
+  },
+  {
+    "name": "bun",
+    "repo": "https://github.com/oven-sh/bun",
+    "domain": "runtime",
+    "language": "Zig",
+    "stars": 79000,
+    "why": "Incredibly fast JavaScript runtime bundler and package manager"
+  },
+  {
+    "name": "zod",
+    "repo": "https://github.com/colinhacks/zod",
+    "domain": "validation",
+    "language": "TypeScript",
+    "stars": 38000,
+    "why": "TypeScript-first schema validation with static type inference"
+  },
+  {
+    "name": "netty",
+    "repo": "https://github.com/netty/netty",
+    "domain": "networking",
+    "language": "Java",
+    "stars": 34000,
+    "why": "Netty event-driven asynchronous network application framework"
+  },
+  {
+    "name": "daily",
+    "repo": "https://github.com/dailydotdev/daily",
+    "domain": "social-media",
+    "language": "TypeScript",
+    "stars": 20000,
+    "why": "Professional network for developers to learn collaborate and grow"
+  },
+  {
+    "name": "freqtrade",
+    "repo": "https://github.com/freqtrade/freqtrade",
+    "domain": "fintech",
+    "language": "Python",
+    "stars": 39000,
+    "why": "Free open source crypto trading bot"
+  },
+  {
+    "name": "fastlane",
+    "repo": "https://github.com/fastlane/fastlane",
+    "domain": "mobile-ci",
+    "language": "Ruby",
+    "stars": 42000,
+    "why": "The easiest way to automate building and releasing iOS and Android apps"
+  }
+]

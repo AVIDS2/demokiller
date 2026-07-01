@@ -1,0 +1,6 @@
+{
+  "name": "redirect-hardened",
+  "dependencies": {
+    "express": "4.21.0"
+  }
+}

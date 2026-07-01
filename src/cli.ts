@@ -335,9 +335,22 @@ export function isDirectCliInvocation(moduleUrl: string, argvPath?: string): boo
 }
 
 if (isDirectCliInvocation(import.meta.url, process.argv[1])) {
+  process.on("SIGTERM", () => {
+    process.exitCode = 143;
+    process.exit();
+  });
+  process.on("SIGINT", () => {
+    process.exitCode = 130;
+    process.exit();
+  });
+
   runCli().then((result) => {
     if (result.stdout) process.stdout.write(`${result.stdout}\n`);
     if (result.stderr) process.stderr.write(`${result.stderr}\n`);
     process.exitCode = result.exitCode;
+  }).catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Unexpected error: ${message}\n`);
+    process.exitCode = 1;
   });
 }

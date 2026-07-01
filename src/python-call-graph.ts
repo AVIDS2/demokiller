@@ -105,14 +105,15 @@ function getTextOfNode(node: TSNode): string {
 async function walkPythonFiles(root: string, dir = root): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const result: string[] = [];
-  const skip = new Set(["node_modules", ".next", "dist", "build", "__pycache__", ".venv", "venv", ".git", "vendor"]);
+  const skip = new Set(["node_modules", ".next", "dist", "build", "__pycache__", ".venv", "venv", ".git", "vendor", "third_party", "fixtures", "testdata", "samples", "test", "tests", "__tests__", "spec", "specs", "example", "examples", "demo", "demos", "bench", "benchmark", "benchmarks", "docs", "doc", ".worktrees", ".demokiller", ".claude"]);
+  const SKIP_FILE_RE = /[._](?:test|spec|e2e)\.[^.]+$/i;
 
   for (const entry of entries) {
     if (skip.has(entry.name)) continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       result.push(...(await walkPythonFiles(root, fullPath)));
-    } else if (entry.name.endsWith(".py")) {
+    } else if (entry.name.endsWith(".py") && !SKIP_FILE_RE.test(entry.name)) {
       result.push(path.relative(root, fullPath).replaceAll("\\", "/"));
     }
   }

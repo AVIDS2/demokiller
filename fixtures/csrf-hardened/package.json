@@ -1,0 +1,7 @@
+{
+  "name": "csrf-hardened",
+  "dependencies": {
+    "express": "4.21.0",
+    "csurf": "1.11.0"
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "ruleId": "CUSTOM-NO-TODO",
+    "title": "No TODO comments in production code",
+    "severity": "low",
+    "confidence": "high",
+    "patterns": ["//\\s*TODO"],
+    "fileGlobs": [".ts", ".tsx", ".js", ".jsx"],
+    "consequence": "TODO comments indicate incomplete work that shouldn't ship.",
+    "acceptanceCriteria": ["Resolve all TODO comments before deploying."]
+  }
+]

@@ -3,22 +3,24 @@ import type { AnalysisReport, Finding } from "../types.js";
 function renderFinding(finding: Finding): string {
   const evidenceLines = finding.evidence.map((evidence) => {
     const suffix = evidence.location.line ? `:${evidence.location.line}` : "";
-    return `- Evidence: ${evidence.location.path}${suffix} via ${evidence.detector}`;
+    return `- Evidence: \`${evidence.location.path}${suffix}\` via ${evidence.detector}`;
   });
+
+  const loc = finding.evidence?.[0]?.location;
+  const fileLine = loc ? `\nFile: \`${loc.path}${loc.line ? `:${loc.line}` : ""}\`` : "";
 
   return [
     `### ${finding.ruleId}: ${finding.title}`,
     "",
-    `Severity: ${finding.severity}`,
-    `Confidence: ${finding.confidence}`,
-    finding.entryPoint ? `Entry point: ${finding.entryPoint}` : undefined,
+    `Severity: **${finding.severity}** | Confidence: ${finding.confidence}${fileLine}`,
+    finding.entryPoint ? `Entry point: \`${finding.entryPoint}\`` : undefined,
     finding.capability ? `Capability: ${finding.capability}` : undefined,
     finding.asset ? `Asset: ${finding.asset}` : undefined,
     `Missing controls: ${finding.missingControls.join(", ")}`,
     "",
-    `Production consequence: ${finding.consequence}`,
+    `> ${finding.consequence}`,
     "",
-    "Acceptance criteria:",
+    "**Acceptance criteria:**",
     ...finding.acceptanceCriteria.map((item) => `- ${item}`),
     "",
     ...evidenceLines,

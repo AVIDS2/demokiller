@@ -1,0 +1,6 @@
+{
+  "name": "xss-vulnerable",
+  "dependencies": {
+    "express": "4.21.0"
+  }
+}

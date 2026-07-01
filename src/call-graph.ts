@@ -17,6 +17,7 @@ export interface CallSite {
   file: string;
   line: number;
   argCount: number;
+  weak?: boolean;       // true for dynamic imports / uncertain edges
 }
 
 export interface ImportInfo {
@@ -31,6 +32,95 @@ export interface CallGraph {
   calls: CallSite[];
   imports: ImportInfo[];
   fileIndex: Map<string, string>;        // basename → full relative path
+}
+
+// ─── Tree-sitter singleton ──────────────────────────────────────
+
+let parser: any = null;
+let ParserLib: any = null;
+const languageCache = new Map<string, any>();
+
+const WASM_DIR = "node_modules/tree-sitter-wasms/out";
+
+const EXT_TO_GRAMMAR: Record<string, string> = {
+  ".js": "javascript", ".jsx": "javascript", ".mjs": "javascript",
+  ".ts": "typescript", ".tsx": "tsx", ".mts": "typescript",
+  ".py": "python",
+  ".go": "go",
+  ".rs": "rust",
+  ".java": "java",
+  ".c": "c", ".h": "c",
+  ".cpp": "cpp", ".cxx": "cpp", ".cc": "cpp", ".hpp": "cpp",
+  ".cs": "c_sharp",
+  ".php": "php",
+  ".rb": "ruby",
+  ".swift": "swift",
+  ".lua": "lua",
+  ".sh": "bash", ".bash": "bash", ".zsh": "bash",
+  ".kt": "kotlin", ".kts": "kotlin",
+  ".scala": "scala", ".sc": "scala",
+  ".dart": "dart",
+  ".zig": "zig",
+  ".vue": "vue",
+};
+
+async function getParser(): Promise<any> {
+  if (parser) return parser;
+  ParserLib = await import("web-tree-sitter");
+  await ParserLib.Parser.init();
+  parser = new ParserLib.Parser();
+  return parser;
+}
+
+async function getLanguage(ext: string): Promise<any | null> {
+  if (languageCache.has(ext)) return languageCache.get(ext);
+  const grammarName = EXT_TO_GRAMMAR[ext];
+  if (!grammarName) return null;
+  try {
+    const wasmPath = path.join(WASM_DIR, `tree-sitter-${grammarName}.wasm`);
+    const lang = await ParserLib.Language.load(wasmPath);
+    languageCache.set(ext, lang);
+    return lang;
+  } catch {
+    return null;
+  }
+}
+
+// ─── AST node helpers ───────────────────────────────────────────
+
+interface TSNode {
+  type: string;
+  text: string;
+  startPosition: { row: number; column: number };
+  endPosition: { row: number; column: number };
+  childCount: number;
+  child(index: number): TSNode | null;
+  children: TSNode[];
+  namedChildren: TSNode[];
+  parent: TSNode | null;
+  fieldNameForChild(index: number): string | null;
+  descendantsOfType(type: string | string[]): TSNode[];
+}
+
+function getChildByFieldName(node: TSNode, name: string): TSNode | null {
+  for (let i = 0; i < node.childCount; i++) {
+    if (node.fieldNameForChild(i) === name) {
+      return node.child(i);
+    }
+  }
+  return null;
+}
+
+function isJsTsExt(ext: string): boolean {
+  return [".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs", ".vue"].includes(ext);
+}
+
+function isPythonExt(ext: string): boolean {
+  return ext === ".py";
+}
+
+function isGoExt(ext: string): boolean {
+  return ext === ".go";
 }
 
 // ─── Regex-based extraction (fast, no AST dependency) ───────────
@@ -65,8 +155,6 @@ const IMPORT_PATTERNS = [
   /from\s+(\S+)\s+import\s+(.+)/g,
 ];
 
-const CALL_PATTERN = /(\w+(?:\.\w+)*)\s*\(/g;
-
 const JS_TS_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"];
 
 // ─── File scanning ──────────────────────────────────────────────
@@ -74,7 +162,14 @@ const JS_TS_EXTS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".mjs"];
 async function walkSourceFiles(root: string, dir = root): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const result: string[] = [];
-  const skip = new Set(["node_modules", ".next", "dist", "build", "target", "__pycache__", ".venv", "venv", "vendor"]);
+  const skip = new Set([
+    "node_modules", ".next", "dist", "build", "target", "__pycache__", ".venv", "venv", "vendor", "third_party",
+    "fixtures", "testdata", "test_data", "samples", "e2e", "cypress", "playwright",
+    "test", "tests", "__tests__", "spec", "specs", "example", "examples", "demo", "demos",
+    "bench", "benchmark", "benchmarks", "docs", "doc", ".git",
+    ".worktrees", ".demokiller", ".claude", ".vscode",
+  ]);
+  const SKIP_FILE_RE = /[._](?:test|spec|e2e)\.[^.]+$/i;
 
   for (const entry of entries) {
     if (skip.has(entry.name)) continue;
@@ -83,6 +178,7 @@ async function walkSourceFiles(root: string, dir = root): Promise<string[]> {
       result.push(...(await walkSourceFiles(root, fullPath)));
     } else {
       const rel = path.relative(root, fullPath).replaceAll("\\", "/");
+      if (SKIP_FILE_RE.test(entry.name)) continue;
       if (/\.(ts|tsx|js|jsx|mts|mjs|py|go|rs|java|cs|rb|php)$/.test(rel)) {
         result.push(rel);
       }
@@ -140,9 +236,9 @@ function resolveImport(source: string, currentFile: string, fileIndex: Map<strin
   return undefined;
 }
 
-// ─── Extraction ─────────────────────────────────────────────────
+// ─── Regex-based extraction (original, fallback) ────────────────
 
-function extractFunctions(text: string, file: string): FuncDef[] {
+function extractFunctionsRegex(text: string, file: string): FuncDef[] {
   const funcs: FuncDef[] = [];
   const seen = new Set<string>();
 
@@ -161,7 +257,7 @@ function extractFunctions(text: string, file: string): FuncDef[] {
   return funcs;
 }
 
-function extractImports(text: string, file: string): ImportInfo[] {
+function extractImportsRegex(text: string, file: string): ImportInfo[] {
   const imports: ImportInfo[] = [];
 
   // ES6 imports: import { a, b } from './mod'
@@ -192,7 +288,7 @@ function extractImports(text: string, file: string): ImportInfo[] {
   return imports;
 }
 
-function extractCalls(text: string, file: string): CallSite[] {
+function extractCallsRegex(text: string, file: string): CallSite[] {
   const calls: CallSite[] = [];
   const funcStarts = new Map<number, string>();
 
@@ -255,6 +351,434 @@ function countArgs(text: string, openParenPos: number): number {
   return count;
 }
 
+// ─── AST-based extraction (tree-sitter) ─────────────────────────
+
+const CALL_KEYWORDS = new Set([
+  "if", "for", "while", "switch", "catch", "return", "typeof", "instanceof",
+  "new", "await", "async", "import", "export", "from", "const", "let", "var",
+  "function", "class", "extends", "implements", "interface", "type", "enum",
+  "delete", "void", "throw", "yield",
+]);
+
+// Find which function a given row belongs to (for AST-based caller resolution)
+function findEnclosingFunction(
+  row: number,
+  funcs: FuncDef[],
+): string {
+  let best: FuncDef | undefined;
+  for (const func of funcs) {
+    // func.line is 1-based, row is 0-based
+    if (func.line - 1 <= row) {
+      if (!best || func.line > best.line) {
+        best = func;
+      }
+    }
+  }
+  return best ? best.name : "<module>";
+}
+
+// Build a map of class body ranges for JS/TS: className → { startRow, endRow, methods: Map<string, number> }
+interface ClassInfo {
+  name: string;
+  startRow: number;
+  endRow: number;
+  methods: Map<string, number>; // methodName → definition row
+}
+
+function extractClassInfos(rootNode: TSNode, file: string): ClassInfo[] {
+  const classes: ClassInfo[] = [];
+  // JS/TS class_declaration, Python class_definition, Go struct (handled differently)
+  const classTypes = ["class_declaration", "class_definition", "class"];
+  for (const ctype of classTypes) {
+    for (const cls of rootNode.descendantsOfType(ctype) ?? []) {
+      const nameNode = getChildByFieldName(cls, "name");
+      if (!nameNode) continue;
+
+      const methods = new Map<string, number>();
+      // JS/TS: method_definition; Python: function_definition inside class
+      const methodDefs = cls.descendantsOfType("method_definition") ?? [];
+      for (const md of methodDefs) {
+        const mn = getChildByFieldName(md, "name");
+        if (mn) methods.set(mn.text, md.startPosition.row);
+      }
+      // Python methods are just function_definition inside class body
+      const pyFuncDefs = cls.descendantsOfType("function_definition") ?? [];
+      for (const fd of pyFuncDefs) {
+        const fn = getChildByFieldName(fd, "name");
+        if (fn && !methods.has(fn.text)) {
+          methods.set(fn.text, fd.startPosition.row);
+        }
+      }
+
+      classes.push({
+        name: nameNode.text,
+        startRow: cls.startPosition.row,
+        endRow: cls.endPosition.row,
+        methods,
+      });
+    }
+  }
+  return classes;
+}
+
+// Extract function definitions via AST
+function extractFunctionsAST(rootNode: TSNode, file: string, ext: string): FuncDef[] {
+  const funcs: FuncDef[] = [];
+  const seen = new Set<string>();
+
+  // Determine which node types represent function definitions for this language
+  const funcTypes = isJsTsExt(ext)
+    ? ["function_declaration", "function_definition", "method_definition"]
+    : isPythonExt(ext)
+    ? ["function_definition"]
+    : isGoExt(ext)
+    ? ["function_declaration", "method_declaration"]
+    : ["function_declaration", "function_definition", "method_definition",
+       "method_declaration", "function_item"]; // Rust fn, Java/C# methods
+
+  for (const ftype of funcTypes) {
+    for (const node of rootNode.descendantsOfType(ftype) ?? []) {
+      const nameNode = getChildByFieldName(node, "name");
+      if (!nameNode) continue;
+
+      const name = nameNode.text;
+      // For methods, include class name prefix to avoid ambiguity
+      let qualifiedName = name;
+      if (node.type === "method_definition" || node.type === "method_declaration") {
+        const parent = node.parent;
+        if (parent?.type === "class_body" || parent?.type === "class_declaration") {
+          const className = getChildByFieldName(parent.parent!, "name");
+          if (className) {
+            qualifiedName = `${className.text}.${name}`;
+          }
+        }
+      }
+
+      if (seen.has(qualifiedName)) continue;
+      seen.add(qualifiedName);
+
+      // Extract params
+      const params: string[] = [];
+      const paramsNode = getChildByFieldName(node, "parameters")
+        ?? getChildByFieldName(node, "formal_parameters")
+        ?? getChildByFieldName(node, "parameter_list");
+      if (paramsNode) {
+        for (const child of paramsNode.namedChildren) {
+          if (child.type === "identifier" || child.type === "simple_parameter") {
+            const ident = child.type === "identifier" ? child : getChildByFieldName(child, "name");
+            if (ident) params.push(ident.text);
+          } else if (child.type === "required_parameter" || child.type === "optional_parameter") {
+            const ident = getChildByFieldName(child, "name")
+              ?? getChildByFieldName(child, "pattern");
+            if (ident) params.push(ident.text);
+          } else if (child.type === "typed_parameter" || child.type === "default_parameter") {
+            for (const sub of child.namedChildren) {
+              if (sub.type === "identifier") { params.push(sub.text); break; }
+            }
+          } else if (child.type === "parameter" && child.namedChildren.length > 0) {
+            // Go parameter
+            for (const sub of child.namedChildren) {
+              if (sub.type === "identifier") { params.push(sub.text); break; }
+            }
+          }
+        }
+      }
+
+      funcs.push({
+        name: qualifiedName,
+        file,
+        line: node.startPosition.row + 1,
+        params,
+        bodyRange: { start: node.startPosition.row, end: node.endPosition.row },
+      });
+    }
+  }
+
+  return funcs;
+}
+
+// Extract calls via AST
+function extractCallsAST(
+  rootNode: TSNode,
+  file: string,
+  funcs: FuncDef[],
+  classInfos: ClassInfo[],
+  ext: string,
+): CallSite[] {
+  const calls: CallSite[] = [];
+
+  // 1. Standard call_expression / call nodes
+  const callTypes = isPythonExt(ext) ? ["call"] : ["call_expression"];
+  for (const callType of callTypes) {
+    for (const callNode of rootNode.descendantsOfType(callType) ?? []) {
+      const funcNode = getChildByFieldName(callNode, "function");
+      if (!funcNode) continue;
+
+      let callee: string;
+      let isDynamicImport = false;
+
+      if (funcNode.type === "identifier") {
+        callee = funcNode.text;
+      } else if (funcNode.type === "member_expression" || funcNode.type === "attribute") {
+        // obj.method or obj.method()
+        const objNode = getChildByFieldName(funcNode, "object");
+        const propNode = getChildByFieldName(funcNode, "property")
+          ?? getChildByFieldName(funcNode, "attribute");
+        if (objNode && propNode) {
+          callee = `${objNode.text}.${propNode.text}`;
+
+          // Class method tracking: this.method() → resolve to class method
+          if (objNode.type === "this") {
+            // Find the enclosing class and resolve this.method
+            const row = callNode.startPosition.row;
+            for (const cls of classInfos) {
+              if (row >= cls.startRow && row <= cls.endRow) {
+                const methodRow = cls.methods.get(propNode.text);
+                if (methodRow !== undefined) {
+                  callee = `${cls.name}.${propNode.text}`;
+                }
+                break;
+              }
+            }
+          }
+        } else {
+          callee = funcNode.text;
+        }
+      } else if (funcNode.type === "super") {
+        callee = "super";
+      } else if (funcNode.type === "parenthesized_expression") {
+        // (someFunc)() — extract inner identifier
+        const inner = funcNode.namedChildren.find((c: TSNode) =>
+          c.type === "identifier" || c.type === "member_expression"
+        );
+        callee = inner?.text ?? funcNode.text;
+      } else {
+        callee = funcNode.text;
+      }
+
+      // Skip keywords
+      if (CALL_KEYWORDS.has(callee)) continue;
+      // Skip if it looks like a type annotation or keyword usage
+      if (/^(if|for|while|switch|catch|return|typeof|instanceof|new|await|async|import|export|from|const|let|var|function|class|extends|implements|interface|type|enum)$/.test(callee)) continue;
+
+      const line = callNode.startPosition.row + 1;
+
+      // Detect dynamic import: `import(expression)` or `await import(path)`
+      if (callee === "import" && isJsTsExt(ext)) {
+        isDynamicImport = true;
+        callee = "dynamic:import";
+      }
+
+      // Count arguments
+      const argCount = countArgsFromAST(callNode, ext);
+
+      // Determine enclosing function
+      const callerName = findEnclosingFunction(callNode.startPosition.row, funcs);
+
+      calls.push({
+        caller: `${file}:${callerName}`,
+        callee,
+        file,
+        line,
+        argCount,
+        weak: isDynamicImport || undefined,
+      });
+    }
+  }
+
+  // 2. Callback/lambda tracking: find calls inside arrow functions and function expressions
+  //    passed as arguments. These are already captured by the call_expression scan above
+  //    since tree-sitter finds them at any nesting depth. No extra logic needed —
+  //    the enclosing function resolution handles it.
+
+  // 3. `new` expressions: new Foo() is also a call
+  if (isJsTsExt(ext)) {
+    for (const newExpr of rootNode.descendantsOfType("new_expression") ?? []) {
+      const constructorNode = getChildByFieldName(newExpr, "constructor");
+      if (!constructorNode) continue;
+      const callee = constructorNode.text;
+      if (CALL_KEYWORDS.has(callee)) continue;
+
+      const line = newExpr.startPosition.row + 1;
+      const callerName = findEnclosingFunction(newExpr.startPosition.row, funcs);
+
+      calls.push({
+        caller: `${file}:${callerName}`,
+        callee,
+        file,
+        line,
+        argCount: 0, // new expression arg counting is less critical
+      });
+    }
+  }
+
+  return calls;
+}
+
+function countArgsFromAST(callNode: TSNode, ext: string): number {
+  // For JS/TS: arguments node; for Python: arguments node; for Go: argument_list
+  const argsNode = getChildByFieldName(callNode, "arguments")
+    ?? getChildByFieldName(callNode, "args");
+  if (!argsNode) return 0;
+
+  if (isPythonExt(ext)) {
+    // Python: count named_children excluding comment
+    const count = argsNode.namedChildren.filter((c: TSNode) => c.type !== "comment").length;
+    return count === 0 && argsNode.text !== "()" ? 1 : count;
+  }
+
+  // JS/TS/Go: count children that are arguments (commas are anonymous children)
+  let count = 0;
+  for (const child of argsNode.namedChildren) {
+    if (child.type !== "comment") count++;
+  }
+  // If the arguments node is empty "()", count = 0
+  if (count === 0 && argsNode.text.replace(/\s/g, "") !== "()") {
+    // Single unnamed expression?
+    if (argsNode.namedChildren.length === 0 && argsNode.childCount > 2) count = 1;
+  }
+  return count;
+}
+
+// Extract imports via AST
+function extractImportsAST(rootNode: TSNode, file: string, ext: string): ImportInfo[] {
+  const imports: ImportInfo[] = [];
+
+  if (isJsTsExt(ext)) {
+    // import { a, b } from './mod'
+    // import foo from './mod'
+    // import * as foo from './mod'
+    for (const stmt of rootNode.descendantsOfType("import_statement") ?? []) {
+      const sourceNode = getChildByFieldName(stmt, "source");
+      const source = sourceNode?.text?.replace(/^['"]|['"]$/g, "") ?? "";
+      if (!source) continue;
+
+      // Named imports: import { a, b } from '...'
+      for (const id of stmt.descendantsOfType("identifier") ?? []) {
+        // Exclude identifiers that are the source string
+        if (id.parent?.type === "string" || id.parent?.type === "string_fragment") continue;
+        // Only top-level import specifiers
+        if (id.parent?.type === "import_specifier") {
+          // Use the aliased name if present
+          const alias = getChildByFieldName(id.parent, "alias");
+          imports.push({
+            file,
+            imported: alias ? alias.text : id.text,
+            source,
+          });
+        } else if (id.parent?.type === "import_clause") {
+          imports.push({ file, imported: id.text, source });
+        }
+      }
+
+      // Namespace import: import * as foo from '...'
+      const nsId = stmt.descendantsOfType("namespace_import") ?? [];
+      for (const ns of nsId) {
+        const id = ns.namedChildren.find((c: TSNode) => c.type === "identifier");
+        if (id) imports.push({ file, imported: id.text, source });
+      }
+
+      // If no identifiers found but there's a source, it's a side-effect import
+      // (import './polyfill') — no names to track
+    }
+
+    // Dynamic imports: const mod = await import('./mod')
+    for (const dynImport of rootNode.descendantsOfType("import") ?? []) {
+      // tree-sitter may parse dynamic import() as a call expression
+      // Already handled in extractCallsAST — mark as weak edge
+    }
+
+    // require() calls
+    for (const call of rootNode.descendantsOfType("call_expression") ?? []) {
+      const funcNode = getChildByFieldName(call, "function");
+      if (!funcNode || funcNode.text !== "require") continue;
+
+      const argsNode = getChildByFieldName(call, "arguments");
+      if (!argsNode || argsNode.namedChildren.length === 0) continue;
+
+      const sourceArg = argsNode.namedChildren[0];
+      const source = sourceArg.text.replace(/^['"]|['"]$/g, "");
+
+      // Check if result is destructured: const { a, b } = require(...)
+      const parent = call.parent;
+      if (parent?.type === "variable_declarator") {
+        const pattern = getChildByFieldName(parent, "name");
+        if (pattern?.type === "object_pattern") {
+          for (const prop of pattern.namedChildren) {
+            const propName = getChildByFieldName(prop, "name") ?? getChildByFieldName(prop, "value");
+            if (propName) imports.push({ file, imported: propName.text, source });
+          }
+        } else if (pattern?.type === "identifier") {
+          imports.push({ file, imported: pattern.text, source });
+        }
+      }
+    }
+  }
+
+  if (isPythonExt(ext)) {
+    // import X, import X.Y.Z
+    for (const stmt of rootNode.descendantsOfType("import_statement") ?? []) {
+      const dottedNames = stmt.descendantsOfType("dotted_name") ?? [];
+      const aliased = stmt.descendantsOfType("aliased_import") ?? [];
+
+      if (aliased.length > 0) {
+        for (const a of aliased) {
+          const nameNode = a.namedChildren.find((c: TSNode) => c.type === "dotted_name" || c.type === "identifier");
+          const aliasNode = a.namedChildren.find((c: TSNode) => c.type === "identifier" && c !== nameNode);
+          imports.push({
+            file,
+            imported: aliasNode ? aliasNode.text : (nameNode?.text ?? ""),
+            source: nameNode?.text ?? "",
+          });
+        }
+      } else {
+        for (const d of dottedNames) {
+          imports.push({ file, imported: d.text, source: d.text });
+        }
+      }
+    }
+
+    // from X import Y, from X.Y import Z
+    for (const stmt of rootNode.descendantsOfType("import_from_statement") ?? []) {
+      const moduleNode = stmt.namedChildren.find((c: TSNode) => c.type === "dotted_name" || c.type === "relative_import");
+      const source = moduleNode?.text ?? "";
+
+      const names = stmt.namedChildren.filter(
+        (c: TSNode) => (c.type === "dotted_name" && c !== moduleNode) || c.type === "aliased_import" || c.type === "identifier"
+      );
+
+      for (const nameNode of names) {
+        if (nameNode.type === "aliased_import") {
+          const original = nameNode.namedChildren.find((c: TSNode) => c.type === "dotted_name" || c.type === "identifier");
+          const alias = nameNode.namedChildren.filter((c: TSNode) => c.type === "identifier").pop();
+          imports.push({ file, imported: alias ? alias.text : (original?.text ?? ""), source });
+        } else if (nameNode.type === "dotted_name" || nameNode.type === "identifier") {
+          if (nameNode === moduleNode) continue;
+          if (nameNode.text === "import") continue;
+          imports.push({ file, imported: nameNode.text, source });
+        }
+      }
+    }
+  }
+
+  if (isGoExt(ext)) {
+    // Go imports: import "pkg" or import ( "pkg1" "pkg2" )
+    for (const spec of rootNode.descendantsOfType("import_spec") ?? []) {
+      const pathNode = spec.namedChildren.find((c: TSNode) =>
+        c.type === "interpreted_string_literal" || c.type === "raw_string_literal"
+      );
+      if (pathNode) {
+        const importPath = pathNode.text.replace(/^["']|["']$/g, "");
+        // Go import name = last segment of path
+        const importName = importPath.split("/").pop() ?? importPath;
+        imports.push({ file, imported: importName, source: importPath });
+      }
+    }
+  }
+
+  return imports;
+}
+
 // ─── Graph builder ──────────────────────────────────────────────
 
 export async function buildCallGraph(root: string): Promise<CallGraph> {
@@ -264,27 +788,79 @@ export async function buildCallGraph(root: string): Promise<CallGraph> {
   const allCalls: CallSite[] = [];
   const allImports: ImportInfo[] = [];
 
+  // Initialize tree-sitter parser once for all files
+  let hasParser = false;
+  try {
+    await getParser();
+    hasParser = true;
+  } catch {
+    // tree-sitter not available, fall back to regex for all files
+  }
+
   for (const file of files) {
     let text: string;
     try {
       text = await fs.readFile(path.join(root, file), "utf8");
     } catch { continue; }
 
-    // Extract functions
-    for (const func of extractFunctions(text, file)) {
-      const qualified = `${file}:${func.name}`;
-      functions.set(qualified, func);
+    const ext = path.extname(file);
+
+    // Try AST-based extraction first
+    let usedAST = false;
+    if (hasParser) {
+      try {
+        const lang = await getLanguage(ext);
+        if (lang) {
+          parser.setLanguage(lang);
+          const tree = parser.parse(text);
+          const rootNode = tree.rootNode as unknown as TSNode;
+
+          // Extract functions via AST
+          const funcs = extractFunctionsAST(rootNode, file, ext);
+          for (const func of funcs) {
+            const qualified = `${file}:${func.name}`;
+            if (!functions.has(qualified)) {
+              functions.set(qualified, func);
+            }
+          }
+
+          // Extract class info for this.method() resolution
+          const classInfos = extractClassInfos(rootNode, file);
+
+          // Extract imports via AST
+          const imports = extractImportsAST(rootNode, file, ext);
+          for (const imp of imports) {
+            imp.resolved = resolveImport(imp.source, file, fileIndex);
+            allImports.push(imp);
+          }
+
+          // Extract calls via AST
+          allCalls.push(...extractCallsAST(rootNode, file, funcs, classInfos, ext));
+
+          usedAST = true;
+        }
+      } catch {
+        // AST extraction failed, fall through to regex
+      }
     }
 
-    // Extract imports and resolve
-    const imports = extractImports(text, file);
-    for (const imp of imports) {
-      imp.resolved = resolveImport(imp.source, file, fileIndex);
-      allImports.push(imp);
-    }
+    // Regex fallback when no grammar available or AST failed
+    if (!usedAST) {
+      for (const func of extractFunctionsRegex(text, file)) {
+        const qualified = `${file}:${func.name}`;
+        if (!functions.has(qualified)) {
+          functions.set(qualified, func);
+        }
+      }
 
-    // Extract calls
-    allCalls.push(...extractCalls(text, file));
+      const imports = extractImportsRegex(text, file);
+      for (const imp of imports) {
+        imp.resolved = resolveImport(imp.source, file, fileIndex);
+        allImports.push(imp);
+      }
+
+      allCalls.push(...extractCallsRegex(text, file));
+    }
   }
 
   return { functions, calls: allCalls, imports: allImports, fileIndex };

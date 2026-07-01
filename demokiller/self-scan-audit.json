@@ -1,0 +1,32 @@
+{
+  "blocker": [],
+  "high": [],
+  "medium": [
+    {
+      "ruleId": "DK-LIB-002",
+      "title": "Library exports functions but no custom error classes",
+      "severity": "medium",
+      "files": [
+        "src/"
+      ]
+    },
+    {
+      "ruleId": "DK-LIB-004",
+      "title": "Library does not support tree-shaking for bundler consumers",
+      "severity": "medium",
+      "files": [
+        "package.json"
+      ]
+    }
+  ],
+  "advisory": [
+    {
+      "ruleId": "DK-UNIVERSAL-001",
+      "title": "Project type: CLI Tool — 6 production concerns to verify",
+      "severity": "advisory",
+      "files": [
+        "package.json"
+      ]
+    }
+  ]
+}

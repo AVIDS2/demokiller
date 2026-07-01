@@ -4,7 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 async function scanForSignalHandlers(root: string): Promise<boolean> {
-  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor"]);
+  const SKIP = new Set(["node_modules", "dist", "build", ".git", "__pycache__", "target", "vendor", "fixtures", "testdata", "samples", ".worktrees", ".demokiller", ".claude"]);
   const EXTS = [".ts", ".tsx", ".js", ".jsx", ".py", ".go", ".rs", ".java", ".rb", ".cs"];
 
   async function walk(dir: string): Promise<string[]> {

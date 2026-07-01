@@ -40,6 +40,11 @@ export interface ProjectInventory {
 const SKIP_DIRS = new Set([
   "node_modules", ".next", "dist", "__pycache__", ".venv", "venv",
   "target", "vendor", ".git", "build", "out", "bin", "obj",
+  // Test fixtures — never production code, always sample/vulnerable test data
+  "fixtures", "testdata", "test_data", "test-data", "samples", "sample-data",
+  "e2e", "cypress", "playwright",
+  // Dev tooling directories — not deployed code
+  ".worktrees", ".demokiller", ".claude", ".vscode",
 ]);
 
 async function walk(root: string, dir = root): Promise<string[]> {

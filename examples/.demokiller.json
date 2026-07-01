@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/demo-killer/demo-killer/main/schemas/demokiller-config.schema.json",
+  "exclude": [
+    "fixtures/**",
+    "testdata/**",
+    "examples/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "rules": {
+    "disabled": [],
+    "overrides": {
+      "DK-ERR-002": {
+        "severity": "medium",
+        "confidence": "low"
+      },
+      "DK-PERF-009": {
+        "severity": "medium"
+      }
+    }
+  },
+  "thresholds": {
+    "maxFindings": 50,
+    "failOn": "blocker"
+  },
+  "output": {
+    "format": "markdown",
+    "top": 20
+  }
+}

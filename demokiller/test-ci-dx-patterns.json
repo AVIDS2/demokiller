@@ -1,0 +1,802 @@
+[
+  {
+    "id": "DK-TEST-001",
+    "title": "Zero test files in project",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "No files matching patterns: **/*test*, **/*spec*, **/tests/**, **/__tests__/**, **/test/** in entire repo; exclude node_modules, vendor, .venv",
+    "why_demo": "No automated verification whatsoever. The developer 'tested' by running the app once and hoping for the best. Any refactoring is Russian roulette."
+  },
+  {
+    "id": "DK-TEST-002",
+    "title": "Test-to-source ratio below threshold",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Count of test files / count of source files < 0.3 (excluding config, generated, and vendored files)",
+    "why_demo": "Most code paths are unverified. Even if some tests exist, the coverage is token — enough to show a green badge, not enough to catch real bugs."
+  },
+  {
+    "id": "DK-TEST-003",
+    "title": "No test runner configured",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No 'test' script in package.json, no pytest.ini/setup.cfg/pyproject.toml [tool.pytest], no build.gradle test task, no Cargo.toml [dev-dependencies], no go test invocation in Makefile/CI",
+    "why_demo": "Tests may exist as files but have no mechanism to actually run them. The test files are decorative — exist to impress code reviewers, never executed."
+  },
+  {
+    "id": "DK-TEST-004",
+    "title": "No coverage tooling configured",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No nyc/c8/istanbul in devDependencies; no --coverage in test script; no pytest-cov in requirements; no coverage.xml or lcov references in CI config; no .coveragerc",
+    "why_demo": "Without coverage metrics, there's no accountability. The team has no idea which code paths are tested and which are time bombs."
+  },
+  {
+    "id": "DK-TEST-005",
+    "title": "Coverage threshold not enforced",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Coverage tool configured but no threshold in config (no 'threshold' in jest.config, no --cov-fail-under in pytest, no coverage.minimum in vitest.config); OR threshold set below 60%",
+    "why_demo": "Coverage can rot silently. Without an enforced floor, 'we'll add tests later' becomes 'we never added tests' within a sprint."
+  },
+  {
+    "id": "DK-TEST-006",
+    "title": "Tests only cover happy path",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Test files contain no assertions for error states: absence of try/catch in tests, no .rejects/.toThrow/.raises, no 4xx/5xx status assertions, no negative test case names (grep for 'error|fail|invalid|reject|throw|exception' in test names yields < 10% of test count)",
+    "why_demo": "Happy-path-only tests verify the demo scenario. Production is the unhappy path — invalid inputs, timeouts, partial failures. These tests catch zero production issues."
+  },
+  {
+    "id": "DK-TEST-007",
+    "title": "No edge case / boundary testing",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No property-based testing libraries (hypothesis, fast-check, quickcheck); no fuzz testing; test inputs are all single hardcoded values with no null/empty/zero/max/negative/unicode variants",
+    "why_demo": "Demo code works with the three test values the developer hardcoded. It has never encountered an empty array, a null field, a 10MB payload, or a unicode string."
+  },
+  {
+    "id": "DK-TEST-008",
+    "title": "No integration tests",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "All test files contain only unit-test patterns (mock/stub/spy in >80% of tests); no test files in directories named integration/e2e/smoke; no HTTP client usage in tests (axios/fetch/requests in test files); no test database setup/teardown",
+    "why_demo": "Every dependency is mocked to hell. The tests prove each function works in isolation but say nothing about whether the system actually functions. The mocks reflect what the developer *thinks* the dependencies do, not what they *actually* do."
+  },
+  {
+    "id": "DK-TEST-009",
+    "title": "No end-to-end tests",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No playwright/cypress/selenium/puppeteer in devDependencies or config files; no *.e2e.* or *.spec.e2e.* files; no E2E step in CI pipeline",
+    "why_demo": "The user journey from UI to database has never been verified. Components may work individually but the wiring between them is untested."
+  },
+  {
+    "id": "DK-TEST-010",
+    "title": "No CI/CD pipeline",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "No .github/workflows/*.yml, no .gitlab-ci.yml, no Jenkinsfile, no .circleci/config.yml, no azure-pipelines.yml, no bitbucket-pipelines.yml, no .buildkite/, no cloudbuild.yaml",
+    "why_demo": "Deployment is 'works on my machine.' There is no automated gate between a developer pushing code and it hitting production. Quality is a gentleman's agreement."
+  },
+  {
+    "id": "DK-TEST-011",
+    "title": "CI pipeline has no test step",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "CI config exists but contains no 'test'/'pytest'/'npm test'/'go test' step; CI only runs build/compile, not test",
+    "why_demo": "CI exists for show — it builds and deploys but never validates. The pipeline is a conveyor belt shipping untested code to production."
+  },
+  {
+    "id": "DK-TEST-012",
+    "title": "CI tests are not required to pass for merge",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "GitHub branch protection rules missing required status checks; CI step present but not in 'required' checks; 'allow merge when pipeline fails' enabled in GitLab; no CODEOWNERS file",
+    "why_demo": "Tests are advisory. A failing test is a yellow warning that developers learn to ignore. Red CI becomes background noise."
+  },
+  {
+    "id": "DK-TEST-013",
+    "title": "No linting configuration",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No .eslintrc*/eslint.config.*, no .pylintrc/pyproject.toml [tool.pylint], no .flake8/pyproject.toml [tool.flake8], no .golangci.yml, no .rubocop.yml, no checkstyle.xml, no .clippy.toml in project root",
+    "why_demo": "Code style and bug patterns are caught only by human review (or not at all). Automated static analysis that catches entire classes of bugs is simply absent."
+  },
+  {
+    "id": "DK-TEST-014",
+    "title": "Linting not enforced in CI",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Lint config exists but no lint step in CI pipeline; or lint step present but 'allow_failure'/'continue-on-error: true'",
+    "why_demo": "Linting is opt-in, which means it's opt-out. Developers run it when they remember, skip it when they're in a hurry (always)."
+  },
+  {
+    "id": "DK-TEST-015",
+    "title": "No type checking enforcement",
+    "severity": "high",
+    "languages": "typescript, python, flow",
+    "detection_signal": "TSConfig missing 'strict: true' or has 'noImplicitAny: false' or 'strictNullChecks: false'; no mypy/mypy.ini/pyproject.toml [tool.mypy]; no flow config; 'any' type usage > 5% of type annotations",
+    "why_demo": "The type system is decoration. 'any' is the escape hatch that turns TypeScript into JavaScript with extra steps. Null pointer exceptions are just waiting for production traffic."
+  },
+  {
+    "id": "DK-TEST-016",
+    "title": "Excessive use of 'any' type",
+    "severity": "high",
+    "languages": "typescript",
+    "detection_signal": "Ratio of ': any' or 'as any' occurrences to total type annotations > 10%; or > 20 occurrences of ': any' in codebase",
+    "why_demo": "Every 'any' is a hole in the type safety net. It means the developer gave up on describing the data shape — and the compiler can no longer catch mistakes."
+  },
+  {
+    "id": "DK-TEST-017",
+    "title": "No pre-commit hooks",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No .husky/, no .pre-commit-config.yaml, no lint-staged in package.json, no .git/hooks/ custom scripts, no lefthook.yml, no simple-git-hooks config",
+    "why_demo": "Nothing prevents garbage from entering the repo. A developer can commit broken code, formatting errors, and console.log statements without any friction."
+  },
+  {
+    "id": "DK-TEST-018",
+    "title": "No lock file committed",
+    "severity": "blocker",
+    "languages": "javascript, python, ruby, rust, go",
+    "detection_signal": "No package-lock.json, yarn.lock, pnpm-lock.yaml in JS projects; no Pipfile.lock, poetry.lock, uv.lock in Python; no Gemfile.lock in Ruby; no Cargo.lock in Rust binaries; no go.sum in Go",
+    "why_demo": "Dependency resolution is non-deterministic. Today it works because dependency v2.3.1 is installed. Tomorrow a new developer (or CI) gets v2.4.0 with a breaking change. 'Works on my machine' in lock-file form."
+  },
+  {
+    "id": "DK-TEST-019",
+    "title": "Lock file in .gitignore",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": ".gitignore contains 'package-lock.json' or 'yarn.lock' or 'poetry.lock' or '*.lock' pattern",
+    "why_demo": "Someone deliberately excluded the reproducibility mechanism. This is actively hostile to deployment consistency."
+  },
+  {
+    "id": "DK-TEST-020",
+    "title": "No dependency update strategy",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No dependabot.yml/.github/dependabot.yml, no renovate.json/renovate.json5/.renovaterc, no greenkeeper.json, no Snyk config; AND project age > 90 days (check first commit date)",
+    "why_demo": "Dependencies rot silently. Known CVEs accumulate. Eventually something breaks or gets exploited, and the team discovers their 'stable' codebase is running on ancient, vulnerable packages."
+  },
+  {
+    "id": "DK-TEST-021",
+    "title": "Pinned dependencies with no update mechanism",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "All dependencies pinned to exact versions (no ^ or ~ in package.json) AND no dependabot/renovate config",
+    "why_demo": "Pinning without updating is not safety — it's stagnation. The codebase fossilizes on the versions available at project creation and accumulates unpatched vulnerabilities."
+  },
+  {
+    "id": "DK-TEST-022",
+    "title": "Manual deployment scripts",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Deployment docs reference manual SSH commands, 'scp', 'rsync' to prod, 'docker push' in README; no deploy automation in CI; scripts in deploy/ or scripts/ contain hardcoded server IPs or hostnames",
+    "why_demo": "Deployment requires tribal knowledge and manual steps. The one person who knows the incantation goes on vacation and nobody can ship. Every deploy is a potential production outage from a typo."
+  },
+  {
+    "id": "DK-TEST-023",
+    "title": "No rollback capability",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No 'rollback' step in deployment pipeline; no versioned deployments; no blue-green or canary configuration; docker-compose uses 'latest' tag; no deployment history or version tags",
+    "why_demo": "If the deploy breaks production, the recovery plan is 'fix forward' which at 3am with a broken database migration means hours of downtime. Demo code assumes nothing ever goes wrong."
+  },
+  {
+    "id": "DK-TEST-024",
+    "title": "No staging / pre-production environment",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "CI/CD deploys directly to production; no staging/preview/qa environment in pipeline config; no environment variables for different stages beyond 'production'",
+    "why_demo": "Code goes from developer laptop to production with zero intermediate validation. The first real users are the quality assurance team."
+  },
+  {
+    "id": "DK-TEST-025",
+    "title": "Hotfixes pushed directly to main",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Git history shows commits on main with 'hotfix'/'fix'/'urgent'/'patch' in message AND no corresponding PR/MR; or branch protection allows direct push to main",
+    "why_demo": "Emergency bypasses become habitual. The 'just this once' hotfix skips tests, review, and staging. Each one is a gamble that becomes the norm."
+  },
+  {
+    "id": "DK-TEST-026",
+    "title": "No code review requirement",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No required reviewers in branch protection; no CODEOWNERS file; PRs with 0 reviews merged in git log; merge button has no 'approvals required' gate",
+    "why_demo": "A single developer's blind spots become production bugs. No second pair of eyes means design flaws, security holes, and logic errors ship undetected."
+  },
+  {
+    "id": "DK-TEST-027",
+    "title": "Tests depend on external services",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Test files contain real URLs (https://api.stripe.com, https://*.amazonaws.com, https://api.openai.com); test files import HTTP clients without mocking; no test fixtures/mocks directory; test env contains real API keys",
+    "why_demo": "Tests fail when the external service is down, rate-limited, or changed its API. Test reliability depends on third-party uptime. CI randomly fails and developers learn to ignore red builds."
+  },
+  {
+    "id": "DK-TEST-028",
+    "title": "No test data management",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No factories (factory_bot, faker, fishery); no fixtures directory; no seed data scripts; tests create data inline with hardcoded strings; no test database reset between runs",
+    "why_demo": "Test data is ad-hoc and fragile. Tests pass when run in order but fail when run in isolation (shared mutable state). Adding a new test breaks existing ones."
+  },
+  {
+    "id": "DK-TEST-029",
+    "title": "Snapshot tests without review process",
+    "severity": "medium",
+    "languages": "javascript, typescript",
+    "detection_signal": "Snapshot files (*.snap) exist AND git log shows commits with 'update snapshots' AND no snapshot review in PR checklist; snapshot files > 500 lines",
+    "why_demo": "Snapshot tests became a rubber stamp. Developers run '--update-snapshot' instead of understanding what changed. The snapshots grew to thousands of lines nobody reads — false security."
+  },
+  {
+    "id": "DK-TEST-030",
+    "title": "Flaky test suppression",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Test files contain retry/repeat annotations (.retry(3), flaky, @retries, pytest-rerunfailures); OR 'skip'/'xit'/'xtest'/'pending' with reason containing 'flaky|intermittent|sometimes|random'; OR CI config has 'retry' on test step",
+    "why_demo": "Flaky tests are symptoms of real race conditions or non-deterministic behavior. Retrying them masks the underlying bug. Eventually it hits production and nobody can reproduce it."
+  },
+  {
+    "id": "DK-TEST-031",
+    "title": "Disabled or skipped tests",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Count of skipped/disabled tests (xit, xdescribe, xtest, @Ignore, @Disabled, test.skip, pytest.mark.skip, t.Skip) > 5% of total test count; OR any skipped test with TODO/FIXME comment",
+    "why_demo": "Disabled tests are broken promises. The code they were protecting is now unguarded. Every skipped test is a regression waiting to happen with nobody watching."
+  },
+  {
+    "id": "DK-TEST-032",
+    "title": "No format / prettier configuration",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No .prettierrc*/prettier.config.*, no .editorconfig, no rustfmt.toml, no .clang-format, no black/pyproject.toml [tool.black]; AND multiple contributors exist",
+    "why_demo": "Every file has different formatting. PRs are full of whitespace diffs that obscure real changes. Code review energy is wasted on 'please fix indentation' instead of logic."
+  },
+  {
+    "id": "DK-TEST-033",
+    "title": "No security scanning in pipeline",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No Snyk, Trivy, Dependabot security alerts, CodeQL, Semgrep, Bandit, Safety, npm audit, or OWASP dependency-check in CI pipeline or project config",
+    "why_demo": "Known vulnerabilities ship to production unchallenged. The codebase is a sitting duck for CVEs in transitive dependencies."
+  },
+  {
+    "id": "DK-TEST-034",
+    "title": "No secrets management",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "Hardcoded API keys/passwords/tokens in source code (regex: /(sk-|pk_|AKIA|ghp_|gho_|xoxb-|xoxp-)[a-zA-Z0-9]{20,}/); OR .env files committed to repo; OR secrets in CI config files as plaintext",
+    "why_demo": "Secrets in code are one git push away from public exposure. When (not if) the repo leaks, every key is a backdoor into production infrastructure."
+  },
+  {
+    "id": "DK-TEST-035",
+    "title": "Console.log / print statement debugging left in",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Source files (non-test) contain console.log/console.warn/console.debug, print(), println(), fmt.Println(), puts, echo (in non-CLI code), System.out.println(); count > 10 in production code",
+    "why_demo": "Debug statements in production are noise, performance waste, and potential information leaks. They tell you the developer was debugging and forgot to clean up."
+  },
+  {
+    "id": "DK-TEST-036",
+    "title": "TODO/FIXME/HACK debt accumulation",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Count of TODO/FIXME/HACK/XXX/TEMP/TEMPORARY/WORKAROUND comments > 15 in production code; OR any TODO older than 180 days (check git blame date)",
+    "why_demo": "TODOs are deferred quality. When they accumulate, the codebase is held together with promises never kept. Each one is a known problem the team chose to ship anyway."
+  },
+  {
+    "id": "DK-TEST-037",
+    "title": "No documentation for setup / onboarding",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No README.md at project root; OR README exists but contains no setup/install/quickstart section (< 50 words); no CONTRIBUTING.md; no docs/ directory for complex projects (> 20 source files)",
+    "why_demo": "The project is a black box. New team members need oral tradition to contribute. Knowledge is trapped in the original developer's head."
+  },
+  {
+    "id": "DK-TEST-038",
+    "title": "No environment parity",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No Dockerfile/docker-compose.yml for local dev; no .env.example; no Vagrantfile; dev dependencies differ from CI/production (different Node/Python version in CI vs local); no .tool-versions/.nvmrc/runtime.txt",
+    "why_demo": "Dev, CI, and production run different configurations. 'It works locally' is meaningless when the environments don't match. Bugs appear only in specific environments."
+  },
+  {
+    "id": "DK-TEST-039",
+    "title": "No monorepo / workspace dependency management",
+    "severity": "medium",
+    "languages": "javascript, typescript, python, java",
+    "detection_signal": "Multiple package.json or pyproject.toml in subdirectories with duplicate dependency declarations and version drift (same package at different versions across workspaces); no workspace protocol or turborepo/nx/lerna config",
+    "why_demo": "Dependency versions drift across packages. One module uses lodash 4.17.20 with a security patch, another uses 4.17.15. Inconsistent runtime behavior across the codebase."
+  },
+  {
+    "id": "DK-TEST-040",
+    "title": "No error boundary / global error handling",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No React error boundaries in component tree; no global exception handler (Express error middleware, Flask errorhandler, Spring @ControllerAdvice); no Sentry/Bugsnag/Rollbar integration; unhandled rejection handlers absent",
+    "why_demo": "Errors crash the entire application instead of being contained. One bad component takes down the whole UI. One unhandled promise rejection kills the server."
+  },
+  {
+    "id": "DK-TEST-041",
+    "title": "No observability / logging framework",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Using console.log/print instead of structured logging (no winston/pino/log4j/serilog/zap/logrus import); no log levels; no request tracing (no correlation IDs); no metrics collection",
+    "why_demo": "When production breaks, the debugging strategy is 'add more print statements and redeploy.' There's no way to trace a request through the system or understand failure patterns."
+  },
+  {
+    "id": "DK-TEST-042",
+    "title": "No health check endpoint",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No /health, /healthz, /ready, /readiness, /liveness endpoints in route definitions; no Kubernetes liveness/readiness probes configured",
+    "why_demo": "Load balancers and orchestrators can't tell if the app is alive. A half-dead process serving 500s stays in rotation while users suffer."
+  },
+  {
+    "id": "DK-TEST-043",
+    "title": "Test files have no descriptive names",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Test files named test1.py, test2.js, spec.test.ts, or test_file.py with sequential numbering; test function names are test_1, test_2, it('works'), it('test') with no behavior description",
+    "why_demo": "When a test fails, the name tells you nothing. You have to read the entire test body to understand what broke. Tests as documentation is impossible when names are meaningless."
+  },
+  {
+    "id": "DK-TEST-044",
+    "title": "No test isolation / shared mutable state",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Tests modify global state without cleanup (no beforeEach/afterEach/tearDown with state reset); shared database without transactions or truncation; process.env mutations without restore; module-level mutable variables changed in tests",
+    "why_demo": "Tests pass in sequence but fail alone, or pass alone but fail in suite. The test suite is a fragile house of cards where execution order matters. Developers stop trusting test results."
+  },
+  {
+    "id": "DK-TEST-045",
+    "title": "No versioning strategy",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No CHANGELOG.md; no conventional-commits enforcement; no semantic-release/release-please/standard-version config; version in package.json/pyproject.toml never bumped (still at 0.0.0 or 1.0.0 with > 50 commits)",
+    "why_demo": "Users and ops can't tell what's deployed. Rolling back to a known-good version is guesswork. Every deploy is 'latest' which could be anything."
+  },
+  {
+    "id": "DK-TEST-046",
+    "title": "Tests take too long to run",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "CI test step duration > 15 minutes for a non-enterprise project; no test parallelization; no test splitting in CI; no test caching; tests run serially when they could run concurrently",
+    "why_demo": "Slow tests mean developers skip them. When running the full suite takes 20 minutes, developers push without running tests and rely on CI. Feedback loops break. Productivity tanks."
+  },
+  {
+    "id": "DK-TEST-047",
+    "title": "No database migration tooling",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "SQL schema changes applied by running raw SQL files or modifying CREATE TABLE manually; no Flyway/Alembic/Prisma Migrate/Knex migrations/ActiveRecord migrations; no migrations/ or db/migrate/ directory",
+    "why_demo": "Schema changes are manual, error-prone, and undocumented. There's no way to reliably apply the same schema to dev, CI, and production. Rolling back a bad migration means manual SQL surgery."
+  },
+  {
+    "id": "DK-TEST-048",
+    "title": "No containerization for reproducible builds",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No Dockerfile for application; deployment assumes specific host OS/packages installed; build instructions are 'install X, then Y, then run Z'; no multi-stage Docker build",
+    "why_demo": "The deployment environment is a snowflake — hand-configured, undocumented, and irreplaceable. If the server dies, rebuilding takes hours of guessing which packages were installed."
+  },
+  {
+    "id": "DK-TEST-049",
+    "title": "Test assertions are too weak",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Tests with no assertions (just calling a function); assertions only check truthiness (expect(result).toBeTruthy(), assert response); snapshot-only tests without specific value checks; assert_called_once without assert_called_with",
+    "why_demo": "The test proves the code runs without crashing, nothing more. A function returning garbage passes the test as long as it's truthy. These tests catch zero real bugs."
+  },
+  {
+    "id": "DK-TEST-050",
+    "title": "No mutation testing",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "No Stryker, pitest, mutmut, cargo-mutants, or go-mutesting config; no mutation score reported anywhere",
+    "why_demo": "Test coverage of 80% sounds great until mutation testing reveals half the tests would pass even with bugs introduced. Coverage measures lines hit, not assertions made. Mutation testing catches weak tests."
+  },
+  {
+    "id": "DK-TEST-051",
+    "title": "Catch-all exception handling in production code",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Bare 'except:' or 'except Exception' with no re-raise; 'catch (e)' with empty block or only comment; 'catch {}' with no logging; rescue => e with only 'nil'; frequency > 3 in production code",
+    "why_demo": "Swallowed exceptions hide bugs. The code silently continues with corrupted state. Everything looks fine until the data is garbage and nobody knows when or where it went wrong."
+  },
+  {
+    "id": "DK-TEST-052",
+    "title": "No contract testing for APIs",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No Pact, Dredd, Schemathesis, Prism, or OpenAPI validation testing; API schemas defined but not enforced against in tests; no request/response validation in integration tests",
+    "why_demo": "Frontend and backend teams have different assumptions about the API contract. Changes to the API break consumers silently. The contract exists only in documentation that's already stale."
+  },
+  {
+    "id": "DK-TEST-053",
+    "title": "No performance / load testing",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No k6, JMeter, Gatling, Locust, Artillery, or wrk config; no benchmarks directory; no performance regression testing in CI; no load test scripts",
+    "why_demo": "Nobody knows if the system handles 100 concurrent users or 10. Performance is assumed, not measured. The demo worked with one user. Production has a thousand."
+  },
+  {
+    "id": "DK-TEST-054",
+    "title": "No database for testing / tests use production DB",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "Test configuration points to production database URL; no separate test database; no SQLite in-memory for tests; DATABASE_URL in test env equals production; no testcontainers usage",
+    "why_demo": "Tests can corrupt production data. A forgotten DELETE FROM users in a test setup script nukes real user data. This isn't demo-grade — it's a ticking time bomb."
+  },
+  {
+    "id": "DK-TEST-055",
+    "title": "Git history rewritten or squashed to hide mistakes",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "Linear git history with no merge commits (always squash-merge OR rebase); OR very few commits relative to project size; OR commit messages are all 'update'/'fix'/'wip'",
+    "why_demo": "When things go wrong, there's no history to bisect. Every commit is a black box. 'git bisect' is useless when every commit is a massive squash."
+  },
+  {
+    "id": "DK-TEST-056",
+    "title": "No .gitignore or incomplete .gitignore",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": ".gitignore missing standard patterns for the tech stack (node_modules, __pycache__, .env, dist/, build/, *.pyc); OR no .gitignore at all; OR .gitignore < 10 lines for a project with > 50 files",
+    "why_demo": "Build artifacts, dependencies, and IDE configs pollute the repo. node_modules committed to git is the classic signature of a developer who copy-pasted 'git init' without understanding git."
+  },
+  {
+    "id": "DK-TEST-057",
+    "title": "No distributed tracing",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No OpenTelemetry, Jaeger, Zipkin, Datadog APM, or New Relic integration; no correlation ID middleware; microservice architecture without trace propagation",
+    "why_demo": "In a distributed system, a single user request touches 5 services. Without tracing, debugging is: 'check each service's logs individually and try to correlate timestamps manually.'"
+  },
+  {
+    "id": "DK-TEST-058",
+    "title": "No feature flag system",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "No LaunchDarkly, Unleash, Flagsmith, GrowthBook, or custom feature flag system; features toggled by commenting code or environment variables only; no gradual rollout mechanism",
+    "why_demo": "Deploying a new feature means deploying to everyone. If it breaks, it breaks for everyone. No gradual rollout, no kill switch, no A/B testing. Ship and pray."
+  },
+  {
+    "id": "DK-TEST-059",
+    "title": "CDN / static asset cache busting absent",
+    "severity": "medium",
+    "languages": "javascript, typescript",
+    "detection_signal": "Static assets referenced without content hashes (src='/app.js' not src='/app.[hash].js'); no webpack/vite/rollup output hashing config; Cache-Control headers missing or set to no-cache on static assets",
+    "why_demo": "Users get stale JavaScript after deployments. Bug fixes don't take effect until hard refresh. Support tickets pile up: 'I cleared my cache and it works now.'"
+  },
+  {
+    "id": "DK-TEST-060",
+    "title": "No graceful shutdown handling",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No SIGTERM/SIGINT handler; no connection draining; no request completion waiting before exit; Kubernetes pods killed mid-request; no cleanup in process exit handlers",
+    "why_demo": "During deployment, in-flight requests are dropped. Users see 502 errors on every deploy. The team learns to deploy at 3am to minimize complaints — a bandaid, not a fix."
+  },
+  {
+    "id": "DK-TEST-061",
+    "title": "Magic numbers and hardcoded constants",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Numeric literals > 3 in non-test production code (excluding 0, 1, -1) with no named constant; hardcoded URLs, ports, timeouts as numbers; regex patterns inline without named groups or comments",
+    "why_demo": "Nobody knows why the timeout is 3000. Changing it requires finding every occurrence. One is changed, others aren't. The behavior becomes inconsistent and inexplicable."
+  },
+  {
+    "id": "DK-TEST-062",
+    "title": "No automated database backup verification",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Backup scripts exist but no restore test; no point-in-time recovery config; backup cron job without health check; no backup monitoring/alerting",
+    "why_demo": "Backups exist but nobody knows if they work. The first restore attempt happens during a real disaster. Murphy's Law guarantees the backup is corrupt when you need it most."
+  },
+  {
+    "id": "DK-TEST-063",
+    "title": "No smoke tests post-deployment",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Deployment pipeline has no post-deploy verification step; no smoke test hitting health endpoint or critical API; no deployment success criteria; deploy is 'complete' when the process exits",
+    "why_demo": "The deploy 'succeeded' (the files were copied) but the app is crashing. Users discover the outage before the monitoring does. The team finds out from Twitter complaints."
+  },
+  {
+    "id": "DK-TEST-064",
+    "title": "No rate limiting or abuse prevention",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No rate limiting middleware (express-rate-limit, django-ratelimit, Rack::Attack); no API key throttling; no request size limits; no CAPTCHA on public endpoints",
+    "why_demo": "A single bad actor or runaway script can DDoS the service. The demo worked for one user. Production has adversarial traffic."
+  },
+  {
+    "id": "DK-TEST-065",
+    "title": "Test doubles not verified",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Mocks/stubs created but never asserted against (createMock/stub without verify/expect); sinon.spy without .calledWith assertions; jest.fn() without .toHaveBeenCalledWith; mock objects created and forgotten",
+    "why_demo": "The mock was set up to prevent errors, not to verify behavior. The function could be calling the dependency with garbage arguments and the test would still pass."
+  },
+  {
+    "id": "DK-TEST-066",
+    "title": "No test for authentication / authorization",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "No tests for: expired tokens, invalid credentials, missing auth headers, insufficient permissions, role-based access, token refresh, session expiry; auth middleware exists but has zero test coverage",
+    "why_demo": "Authentication is the #1 attack surface. If it's untested, there's a good chance a crafted request bypasses it. Demo code proves the happy login path. It never tests the paths an attacker will use."
+  },
+  {
+    "id": "DK-TEST-067",
+    "title": "No input validation testing",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "API endpoints have no tests for: SQL injection payloads, XSS strings, oversized inputs, missing required fields, wrong types, boundary values; no fuzz testing of input handlers",
+    "why_demo": "The code assumes inputs are well-formed. An attacker sends '); DROP TABLE users;-- and the demo code happily executes it. Input validation without testing is theater."
+  },
+  {
+    "id": "DK-TEST-068",
+    "title": "Config values not externalized",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Database URLs, API endpoints, feature toggles, and timeouts hardcoded in source code instead of environment variables or config files; no 12-factor app compliance; config values mixed with business logic",
+    "why_demo": "Changing a database URL requires a code change and redeployment. Different environments (dev/staging/prod) can't coexist in the same codebase without source modification."
+  },
+  {
+    "id": "DK-TEST-069",
+    "title": "No API versioning",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "API routes have no version prefix (/v1/, /v2/); no Accept header versioning; no API deprecation policy; breaking changes shipped without version bump",
+    "why_demo": "A backend change breaks all existing clients simultaneously. There's no way to run old and new API versions in parallel during migration. Consumers are forced to update immediately or break."
+  },
+  {
+    "id": "DK-TEST-070",
+    "title": "No dependency vulnerability scanning",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No 'npm audit'/'pip audit'/'cargo audit'/'bundler-audit' in CI; no Snyk/Socket/GitHub dependency graph; no Dependabot security alerts enabled",
+    "why_demo": "The project ships with known CVEs. Log4Shell, prototype pollution, path traversal — all present and undetected. The demo works because nobody's attacking it (yet)."
+  },
+  {
+    "id": "DK-TEST-071",
+    "title": "Test timeouts not configured",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No test timeout configuration in test runner config (jest.setTimeout, pytest timeout, mocha --timeout); default timeout used; tests that call external services without timeout",
+    "why_demo": "A test that hangs blocks the entire CI pipeline. Developers wait 30 minutes before killing the build. Slow tests become acceptable. The test suite degrades into a slow, unreliable mess."
+  },
+  {
+    "id": "DK-TEST-072",
+    "title": "Circular dependencies in source code",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Import cycle detection tools not configured (no madge --circular, no import-cycle check in eslint, no circular import detection in Python); module A imports B which imports A",
+    "why_demo": "Circular dependencies cause initialization order bugs, make code untestable in isolation, and create tight coupling that prevents refactoring. They're a design smell that demo code never addresses."
+  },
+  {
+    "id": "DK-TEST-073",
+    "title": "No dead code detection",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No tree-shaking verification; no dead code detection tools (ts-prune, knip, vulture, deadcode); no unused import linting rules; exported symbols never imported elsewhere",
+    "why_demo": "Dead code accumulates, confusing developers about what's actually used. Bug fixes in dead code are wasted effort. The codebase grows but the useful surface area shrinks."
+  },
+  {
+    "id": "DK-TEST-074",
+    "title": "No accessibility testing",
+    "severity": "medium",
+    "languages": "javascript, typescript, html",
+    "detection_signal": "No axe-core, pa11y, jest-axe, @testing-library/jest-dom accessibility matchers; no a11y linting (eslint-plugin-jsx-a11y); no WCAG compliance testing in CI",
+    "why_demo": "The UI looks great on the demo presenter's screen. It's completely unusable for anyone using a screen reader, keyboard navigation, or high contrast mode."
+  },
+  {
+    "id": "DK-TEST-075",
+    "title": "No cross-browser / cross-device testing",
+    "severity": "medium",
+    "languages": "javascript, typescript, html",
+    "detection_signal": "No BrowserStack, Sauce Labs, or Playwright cross-browser config; tests only run in one browser (Chrome); no mobile viewport testing; no responsive design verification",
+    "why_demo": "The demo runs on the developer's Chrome on a 1440p monitor. On Safari, Firefox, mobile, or a different screen size, the layout is broken. 30% of users see a broken UI."
+  },
+  {
+    "id": "DK-TEST-076",
+    "title": "No load shedding or circuit breaker",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No circuit breaker pattern (no Hystrix, resilience4j, opossum, cockatiel); no bulkhead isolation; no graceful degradation; all-or-nothing service calls",
+    "why_demo": "One downstream service failure cascades through the entire system. The demo works because all services are healthy. In production, the weakest link brings down everything."
+  },
+  {
+    "id": "DK-TEST-077",
+    "title": "No idempotency in write operations",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "POST/PUT endpoints with no idempotency key handling; payment/charge operations without duplicate detection; no request deduplication; retry logic without idempotent semantics",
+    "why_demo": "Network retry charges the customer twice. Message queue redelivery creates duplicate records. The demo assumes exactly-once delivery. The real world provides at-least-once at best."
+  },
+  {
+    "id": "DK-TEST-078",
+    "title": "No connection pooling or resource management",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Database connections created per-request without pooling; HTTP clients created per-call (no axios.create() reuse); file handles not closed (no try-with-resources / using / defer); no connection pool config",
+    "why_demo": "Works fine with one request. Under load, it exhausts connections, file descriptors, or memory. The demo had one user. Production has a thousand concurrent."
+  },
+  {
+    "id": "DK-TEST-079",
+    "title": "No i18n / localization support",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "Hardcoded user-facing strings in source code (no i18n library like i18next, vue-i18n, react-intl, gettext); date/number formatting using locale-specific defaults; no RTL layout support",
+    "why_demo": "The demo works in English for the developer's locale. The moment it needs to support another language or region, every string needs extraction. Date formats break, text overflows, RTL languages are unreadable."
+  },
+  {
+    "id": "DK-TEST-080",
+    "title": "No automated regression testing on PR",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "CI pipeline runs only on push to main (not on PR); no PR-triggered test suite; no status checks on pull requests; tests run manually before merge",
+    "why_demo": "Regressions are discovered after merge, not before. The PR is approved based on code review alone — the reviewer has no automated confidence that the change doesn't break existing functionality."
+  },
+  {
+    "id": "DK-TEST-081",
+    "title": "No commit message conventions",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "No commitlint config; no conventional-commits enforcement; commit messages are 'fix', 'update', 'asdf', 'wip', 'temp'; git log shows no consistent format",
+    "why_demo": "Git history is noise. Generating changelogs is impossible. 'What changed in v1.2.3?' requires reading every diff. The commit log tells no story about why changes were made."
+  },
+  {
+    "id": "DK-TEST-082",
+    "title": "Tests use real third-party API keys",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "Test files or test config contain real API keys (Stripe sk_live_*, AWS AKIA*, SendGrid SG.*, Twilio); .env.test committed with real keys; no sandbox/test mode for third-party services",
+    "why_demo": "Running tests charges real money, sends real emails, or modifies real data. CI running on every push triggers real API calls with real billing. One test run could cost hundreds."
+  },
+  {
+    "id": "DK-TEST-083",
+    "title": "No deterministic test ordering",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Tests rely on execution order (test B assumes test A ran first and modified shared state); no --randomize or --shuffle flag in test config; test files named with numbers to control order",
+    "why_demo": "The test suite only works in one specific order. Randomize it and half the tests fail. This means the tests share hidden state and can't be parallelized."
+  },
+  {
+    "id": "DK-TEST-084",
+    "title": "No architecture decision records",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "No docs/adr/ or docs/decisions/ directory; no adr-tools config; architectural decisions undocumented; README references no design docs",
+    "why_demo": "Why was Redis chosen over PostgreSQL for caching? Why is the auth flow async? Nobody knows. Six months later, someone rewrites it 'better' and reintroduces the exact problems the original design solved."
+  },
+  {
+    "id": "DK-TEST-085",
+    "title": "No development environment scripts",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No Makefile, package.json scripts, docker-compose.dev.yml, or devcontainer config for local setup; setup requires reading a 50-step wiki page; no 'make dev' or 'npm run dev' one-command setup",
+    "why_demo": "Setting up the project takes a day of 'install this, configure that, run this other thing.' New developers waste a day on environment setup instead of contributing. Tribal knowledge required."
+  },
+  {
+    "id": "DK-TEST-086",
+    "title": "No database indexing strategy",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No CREATE INDEX statements in migrations; no EXPLAIN ANALYZE in test setup; ORM queries without index hints for common access patterns; no database performance monitoring",
+    "why_demo": "The demo database has 100 rows. Queries are instant. Production has 10 million rows. Every list endpoint becomes a full table scan. The app grinds to a halt under real data volume."
+  },
+  {
+    "id": "DK-TEST-087",
+    "title": "No log level management",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "All logging at same level (all DEBUG or all INFO); no runtime log level configuration; no structured logging (JSON format); log output mixed with stdout noise",
+    "why_demo": "In production, either you drown in DEBUG noise or can't see what you need because everything is INFO. There's no way to increase verbosity for a specific component during an incident."
+  },
+  {
+    "id": "DK-TEST-088",
+    "title": "No connection / request timeout configuration",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "HTTP clients created without timeout (axios/requests/fetch without timeout option); database connections without connect_timeout; external service calls with no deadline; default timeout (often 30s+ or infinite)",
+    "why_demo": "A hung downstream service causes a thread/connection leak. Under load, every thread is waiting on a dead service. The demo never hits this because it never makes a request to a slow service."
+  },
+  {
+    "id": "DK-TEST-089",
+    "title": "No automated code formatting enforcement",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Prettier/black/rustfmt/gofmt configured but not enforced in CI or pre-commit; formatter config exists but 'format check' is not a CI step; format is optional",
+    "why_demo": "Formatting is a suggestion, not a rule. PRs have formatting noise mixed with real changes. Some files are formatted, others aren't. The codebase has no visual consistency."
+  },
+  {
+    "id": "DK-TEST-090",
+    "title": "No test for concurrency / race conditions",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Concurrent code (async/await, goroutines, threads, multiprocessing) with no concurrency-specific tests; no stress tests for shared mutable state; no deadlock detection tools; no race detector flags",
+    "why_demo": "The code is single-threaded in development but multi-threaded in production. Race conditions never appear in tests because tests don't exercise concurrent paths. They show up at 1000 requests/second."
+  },
+  {
+    "id": "DK-TEST-091",
+    "title": "No migration rollback testing",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "Database migrations have no down/rollback function; migration tests don't verify rollback; no test that runs migrate up then migrate down then migrate up again",
+    "why_demo": "A bad migration in production has no recovery path. You either fix forward (hoping) or restore from backup (losing data). The demo assumes migrations always succeed."
+  },
+  {
+    "id": "DK-TEST-092",
+    "title": "No API rate limit testing",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Rate limiting configured but no tests verify: limit threshold, window reset, different limit tiers, concurrent client behavior, 429 response format, Retry-After header",
+    "why_demo": "Rate limiting works in the demo but nobody verified the edge cases. Does it reset correctly? Does it count correctly under concurrent requests? Is the 429 response properly formatted? Unknown."
+  },
+  {
+    "id": "DK-TEST-093",
+    "title": "No error message quality testing",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Error responses contain stack traces, internal paths, or SQL queries (grep for 'Error:', 'at /', 'SELECT', 'FROM' in error response tests); no test that error messages are user-safe; no error response schema validation",
+    "why_demo": "Production errors leak internals. The demo shows a friendly error page. In production, the 500 response contains the full stack trace and database query, giving attackers a roadmap."
+  },
+  {
+    "id": "DK-TEST-094",
+    "title": "No health dependency checking",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "Health endpoint returns 200 without checking downstream dependencies (database, cache, message queue, external API); health check is a static 'ok' response",
+    "why_demo": "The health check says 'healthy' while the database is down. Load balancers keep routing traffic to a dead node. The health check is a lie."
+  },
+  {
+    "id": "DK-TEST-095",
+    "title": "No test for graceful degradation",
+    "severity": "medium",
+    "languages": "universal",
+    "detection_signal": "No tests for behavior when external services are unavailable; no fallback mechanism testing; no test for cached responses when source is down; all-or-nothing service dependencies",
+    "why_demo": "When the recommendation service is down, the entire product page 500s instead of showing products without recommendations. The demo assumes all services are always available."
+  },
+  {
+    "id": "DK-TEST-096",
+    "title": "No data validation at API boundaries",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "API endpoints accept request bodies without schema validation (no Joi/Zod/Yup/Pydantic/Marshmallow/Ajv); request params used directly in queries without sanitization; no input sanitization middleware",
+    "why_demo": "The API trusts the client completely. Send a string where a number is expected, add extra fields, nest objects 100 levels deep — the server accepts it all and either crashes or stores garbage."
+  },
+  {
+    "id": "DK-TEST-097",
+    "title": "No monitoring alerts configured",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "No PagerDuty, OpsGenie, Datadog, or Grafana alerting config; no CloudWatch/GCP alert policies; monitoring dashboards exist but no alerts; error rate thresholds not defined",
+    "why_demo": "Monitoring without alerting is a dashboard nobody looks at. The error rate can climb to 50% at 2am and nobody knows until morning standup. Demo projects have dashboards; production needs alarms."
+  },
+  {
+    "id": "DK-TEST-098",
+    "title": "No integration test for payment flows",
+    "severity": "blocker",
+    "languages": "universal",
+    "detection_signal": "Payment processing code exists but no integration tests with Stripe/PayPal/payment provider sandbox; no test for: successful charge, declined card, network timeout during charge, webhook verification, refund flow",
+    "why_demo": "Money is involved. Untested payment code can double-charge customers, fail silently, or leak card details. This isn't demo-grade — it's business-ending-grade."
+  },
+  {
+    "id": "DK-TEST-099",
+    "title": "No test for authorization matrix",
+    "severity": "high",
+    "languages": "universal",
+    "detection_signal": "RBAC/permission system exists but tests only verify 'admin can access admin page'; no test matrix for: user A accessing user B's resources, expired roles, permission inheritance, default permissions",
+    "why_demo": "The demo shows admin sees admin stuff and user sees user stuff. Nobody tested that user can't access admin endpoints by changing the URL. Authorization bypass is the most common vulnerability."
+  },
+  {
+    "id": "DK-TEST-100",
+    "title": "No chaos engineering or fault injection",
+    "severity": "advisory",
+    "languages": "universal",
+    "detection_signal": "No Chaos Monkey, Litmus, Gremlin, or Toxiproxy config; no fault injection testing; no network partition simulation; no disk-full simulation",
+    "why_demo": "The system works perfectly when everything is healthy. Nobody knows what happens when a disk fills up, network latency spikes, or a node goes down. Production will teach you — the hard way."
+  }
+]

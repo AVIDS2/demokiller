@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>AI builds demos. Demo Killer kills demo illusions.</strong><br>
-  Open-source production readiness gate for AI-generated projects — 155 rules, 26 project types, 18 languages, one command.
+  Open-source production readiness gate for AI-generated projects — 320+ rules, 26 project types, 17 languages, one command.
 </p>
 
 <p align="center">
@@ -361,104 +361,37 @@ Demo Killer detects **26 project types**, each with dedicated deep rules.
 
 ## Supported Languages
 
-Demo Killer analyzes **18 languages** with language-aware parsing.
+Demo Killer analyzes **17 languages** with 16 of them having dedicated language-specific rules.
 
-<table>
-<tr>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="32" height="32"><br>
-<strong>TypeScript</strong><br>
-<sub>✅ AST ✅ Call Graph ✅ Taint</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" width="32" height="32"><br>
-<strong>JavaScript</strong><br>
-<sub>✅ AST ✅ Call Graph ✅ Taint</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="32" height="32"><br>
-<strong>Python</strong><br>
-<sub>✅ AST ✅ BFS Call Graph ✅ Taint</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" width="32" height="32"><br>
-<strong>Go</strong><br>
-<sub>✅ AST ⚠️ Regex Call Graph</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg" width="32" height="32"><br>
-<strong>Rust</strong><br>
-<sub>✅ AST ⚠️ Regex Call Graph</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" width="32" height="32"><br>
-<strong>Java</strong><br>
-<sub>✅ AST ⚠️ Regex Call Graph</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/csharp/csharp-original.svg" width="32" height="32"><br>
-<strong>C#</strong><br>
-<sub>✅ AST ⚠️ Regex Call Graph</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" width="32" height="32"><br>
-<strong>PHP</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ruby/ruby-original.svg" width="32" height="32"><br>
-<strong>Ruby</strong><br>
-<sub>✅ AST</sub>
-</td>
-</tr>
-<tr>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/swift/swift-original.svg" width="32" height="32"><br>
-<strong>Swift</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg" width="32" height="32"><br>
-<strong>Kotlin</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/scala/scala-original.svg" width="32" height="32"><br>
-<strong>Scala</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dart/dart-original.svg" width="32" height="32"><br>
-<strong>Dart</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg" width="32" height="32"><br>
-<strong>C / C++</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg" width="32" height="32"><br>
-<strong>Shell</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/lua/lua-original.svg" width="32" height="32"><br>
-<strong>Lua</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg" width="32" height="32"><br>
-<strong>Vue</strong><br>
-<sub>✅ AST</sub>
-</td>
-<td align="center" width="10%">
-<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/zig/zig-original.svg" width="32" height="32"><br>
-<strong>Zig</strong><br>
-<sub>✅ AST</sub>
-</td>
-</tr>
-</table>
+**Full rule coverage** — language-specific rules + route detection + call graph:
+
+| Language | Dedicated Rules | Route Detection | Call Graph | Taint Analysis |
+|----------|----------------|-----------------|------------|----------------|
+| **TypeScript** | Universal rules (DK-AGENT, DK-ERR, DK-PERF, etc.) | ✅ | ✅ | ✅ |
+| **JavaScript** | Universal rules | ✅ | ✅ | ✅ |
+| **Python** | 7 dedicated (DK-PY-001~007) | ✅ | ✅ BFS | ✅ |
+| **Go** | 20 dedicated (DK-GO-001~020) | ✅ | ⚠️ Regex | — |
+| **Rust** | 15 dedicated (DK-RS-001~015) | ✅ | — | — |
+| **Java** | 10 dedicated (DK-JAVA-001~010) | ✅ | — | — |
+| **C / C++** | 10 dedicated (DK-C-001~010) | ✅ | — | — |
+| **Kotlin** | 8 dedicated (DK-KT-001~008) | ✅ | — | — |
+| **C#** | 8 dedicated (DK-CS-001~008) | ✅ | — | — |
+| **PHP** | 8 dedicated (DK-PHP-001~008) | ✅ | — | — |
+| **Ruby** | 8 dedicated (DK-RB-001~008) | ✅ | — | — |
+| **Swift** | 6 dedicated (DK-SW-001~006) | ✅ | — | — |
+| **Dart** | 5 dedicated (DK-DART-001~005) | ✅ | — | — |
+| **Scala** | 5 dedicated (DK-SCALA-001~005) | ✅ | — | — |
+| **Shell** | 5 dedicated (DK-SHELL-001~005) | ✅ | — | — |
+
+**File-level detection** — identified by file extension, project-level rules apply (dependencies, Docker, CI/CD, etc.):
+
+| Language | Notes |
+|----------|-------|
+| **Lua** | Route detection (Lapis) |
+| **Zig** | Route detection |
+| **Vue** | Parsed via tree-sitter |
+
+> **Detection engine note:** TypeScript/JavaScript use tree-sitter AST parsing + full call graph + taint analysis. Python uses tree-sitter AST + BFS call graph. Go uses tree-sitter AST + regex call graph. Other languages each have 5-15 dedicated language rules (regex pattern matching). Universal rules (hardcoded secrets, CORS, CSP, etc.) apply to all languages where routes are detected.
 
 ---
 
@@ -495,6 +428,34 @@ npx demokiller-mcp
 
 ---
 
+## Custom Rules
+
+Demo Killer supports custom rules via the `.demokiller/plugins/` directory.
+
+```json
+// .demokiller/plugins/my-rules.json
+[
+  {
+    "ruleId": "CUSTOM-NO-TODO",
+    "title": "No TODO comments in production code",
+    "severity": "low",
+    "confidence": "high",
+    "patterns": ["//\\s*TODO"],
+    "fileGlobs": [".ts", ".tsx", ".js", ".jsx"],
+    "consequence": "TODO comments indicate incomplete work that shouldn't ship.",
+    "acceptanceCriteria": ["Resolve all TODO comments before deploying."]
+  }
+]
+```
+
+Two detection modes:
+- **patterns** — regex matching (for simple patterns)
+- **detect** — JavaScript function string (for complex logic like counting, context-aware checks)
+
+See `examples/custom-rule-example.json` for the full format.
+
+---
+
 ## vs. Other Tools
 
 | | CodeQL | SonarQube | Semgrep | Snyk | **Demo Killer** |
@@ -511,13 +472,36 @@ CodeQL tells you what's wrong with your code. **Demo Killer tells you if your pr
 
 ---
 
+## Real-World Validation
+
+Demo Killer has been validated on **111 real open-source projects** across **52 domains** and **17 languages**.
+
+| Metric | Value |
+|--------|-------|
+| Projects tested | 111 |
+| Domains covered | 52 |
+| Languages covered | 17 |
+| Blocker-free projects | 65.8% |
+| Test cases | 170 |
+
+**False Positive Fixes (v0.7.7):**
+
+| Rule | Before | After | Reduction |
+|------|--------|-------|-----------|
+| DK-TAINT-001 | 35 fires | 4 fires | -89% |
+| DK-ENV-016 | 32 fires | 0 fires | -100% |
+| DK-SHELL-002 | 13 fires | 0 fires | -100% |
+| DK-AGENT-007 | 11 fires | 0 fires | -100% |
+
+Remaining blockers are real findings: command injection in PaaS (coolify), embedded firmware vulnerabilities (tasmota), data exposure in realtime libs (socketio).
+
+---
+
 ## Roadmap
 
-- Systematic false-positive rate measurement across 100+ real projects
-- Per-file analysis replacing content concatenation (reduce cross-file false positives)
-- Java, C#, PHP, Ruby call graph support
-- Plugin API for custom rules
 - VS Code extension
+- More real-world benchmark data accumulation
+- Per-file analysis replacing content concatenation (reduce cross-file false positives)
 
 ---
 

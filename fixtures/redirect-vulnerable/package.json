@@ -1,0 +1,6 @@
+{
+  "name": "redirect-vulnerable",
+  "dependencies": {
+    "express": "4.21.0"
+  }
+}

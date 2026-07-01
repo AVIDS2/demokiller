@@ -3,6 +3,7 @@ import { inspectRouteSource } from "../source-inspector.js";
 import { buildCallGraph } from "../call-graph.js";
 import { analyzeTaint, findAuthGaps } from "../taint-analysis.js";
 import type { Finding } from "../types.js";
+import { detectIsLibrary, downgradeLibraryFindings } from "./rule-helpers.js";
 // Agent rules
 import { agentCodeExecRule } from "./agent-code-exec.js";
 import { agentToolLimitRule } from "./agent-tool-limit.js";
@@ -57,6 +58,14 @@ import { desktopAppFindings } from "./desktop-app.js";
 import { mobileAppFindings } from "./mobile-app.js";
 import { agentMcpFindings } from "./agent-mcp.js";
 import { pythonFindings } from "./python-taint.js";
+import { goFindings } from "./go-rules.js";
+import { rustFindings } from "./rust-rules.js";
+import { javaFindings } from "./java-rules.js";
+import { kotlinFindings } from "./kotlin-rules.js";
+import { csharpFindings } from "./csharp-rules.js";
+import { phpFindings } from "./php-rules.js";
+import { rubyFindings } from "./ruby-rules.js";
+import { swiftFindings } from "./swift-rules.js";
 import { gameFindings } from "./game.js";
 import { mlPipelineFindings } from "./ml-pipeline.js";
 import { browserExtensionFindings } from "./browser-extension.js";
@@ -72,8 +81,18 @@ import { staticSiteFindings } from "./static-site.js";
 import { cmsFindings } from "./cms.js";
 import { monitoringToolFindings } from "./monitoring-tool.js";
 import { systemsCFindings } from "./systems-c.js";
+import { dartFindings } from "./dart-rules.js";
+import { scalaFindings } from "./scala-rules.js";
+import { shellFindings } from "./shell-rules.js";
+import { environmentFindings } from "./environment-rules.js";
+import { errorHandlingFindings } from "./error-handling-rules.js";
+import { performanceFindings } from "./performance-rules.js";
+import { observabilityFindings } from "./observability-rules.js";
+import { securityHardeningFindings } from "./security-hardening.js";
+import { deploymentFindings } from "./deployment-rules.js";
 import { tsStrictRule } from "./ts-strict.js";
 import { projectTypeFindings } from "./universal-project.js";
+import { customFindings } from "./custom-rules.js";
 
 async function readDeclaredEnvVars(root: string, envExamplePath?: string): Promise<string[]> {
   if (!envExamplePath) return [];
@@ -162,6 +181,14 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...(await mobileAppFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await agentMcpFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await pythonFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await goFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await rustFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await javaFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await kotlinFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await csharpFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await phpFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await rubyFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await swiftFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await gameFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await mlPipelineFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await browserExtensionFindings(root, inventory).catch(() => [] as Finding[])),
@@ -177,10 +204,25 @@ export async function analyzeFindings(root: string): Promise<AnalysisResult> {
     ...(await cmsFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await monitoringToolFindings(root, inventory).catch(() => [] as Finding[])),
     ...(await systemsCFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await dartFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await scalaFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await shellFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await environmentFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await errorHandlingFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await performanceFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await observabilityFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await securityHardeningFindings(root, inventory).catch(() => [] as Finding[])),
+    ...(await deploymentFindings(root, inventory).catch(() => [] as Finding[])),
     ...(function () { try { return projectTypeFindings(inventory); } catch { return []; } })(),
     ...(await gracefulShutdownRule(inventory).catch(() => [] as Finding[])),
     ...(await healthCheckRule(inventory).catch(() => [] as Finding[])),
+    // Custom rules from .demokiller/plugins/
+    ...(await customFindings(root, inventory).catch(() => [] as Finding[])),
   ];
 
-  return { findings, inventory };
+  // Library detection: downgrade app-only rules when project is a library/framework
+  const isLibrary = await detectIsLibrary(root, inventory);
+  const adjustedFindings = downgradeLibraryFindings(findings, isLibrary);
+
+  return { findings: adjustedFindings, inventory };
 }

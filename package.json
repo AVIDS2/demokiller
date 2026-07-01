@@ -1,6 +1,6 @@
 {
   "name": "demokiller",
-  "version": "0.6.1",
+  "version": "0.7.7",
   "private": false,
   "type": "module",
   "bin": {
